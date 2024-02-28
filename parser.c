@@ -20,21 +20,56 @@ typedef struct GrammerElement{
 
 typedef struct GrammerElementHead{
     int count;
-    GrammerElement* next;
+    GrammerElement* first;
+    GrammerElement* last;
 } GrammerElementHead;
 
 typedef struct RHSHead {
     int count;
-    RHS* next;
+    RHS* first;
+    RHS* last;
 } RHSHead;
 
 typedef struct RHS {
     NONTERMINAL nonTerminal;
-    GrammerElementHead *head;
+    GrammerElementHead *grammerHead;
     RHS* next;
 } RHS;
 
 RHSHead* LHSmap[GRAMMER_TABLE_SIZE];
+
+RHSHead* createRHSHead() {
+    RHSHead* newNode = (RHSHead*)malloc(sizeof(RHSHead));
+    newNode->count = 0;
+    newNode->last = NULL;
+    newNode->first = NULL;
+    return newNode;
+}
+
+RHS* createRHSNode(NONTERMINAL nt, GrammerElementHead* grammerElementHead) {
+    RHS* newNode = (RHS*)malloc(sizeof(RHS));
+    newNode->nonTerminal = nt;
+    newNode->grammerHead = grammerElementHead;
+    newNode->next = NULL;
+    return newNode;
+}
+
+GrammerElementHead* createGrammerElementHead() {
+    GrammerElementHead* newNode = (GrammerElementHead*)malloc(sizeof(GrammerElementHead));
+    newNode->count = 0;
+    newNode->first = NULL;
+    newNode->last = NULL;
+    return newNode;
+}
+
+GrammerElement* createGrammerElement(bool terminalORnot, int enumVal) {
+    GrammerElement* newNode = (GrammerElement*)malloc(sizeof(GrammerElement));
+    newNode->next = NULL;
+    newNode->isTerminal = terminalORnot;
+    if(terminalORnot) newNode->TNT.Terminal = enumVal;
+    else newNode->TNT.NonTerminal = enumVal;
+    return newNode;
+}
 
 int main(int argc, char const *argv[]){
 
