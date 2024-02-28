@@ -36,7 +36,7 @@ typedef struct RHS {
     RHS* next;
 } RHS;
 
-RHSHead* LHSmap[GRAMMER_TABLE_SIZE];
+RHSHead* LHSmap[GRAMMER_TABLE_SIZE] = { NULL };
 
 RHSHead* createRHSHead() {
     RHSHead* newNode = (RHSHead*)malloc(sizeof(RHSHead));
@@ -70,6 +70,29 @@ GrammerElement* createGrammerElement(bool terminalORnot, int enumVal) {
     else newNode->TNT.NonTerminal = enumVal;
     return newNode;
 }
+
+void insertRHS(RHSHead* head, RHS* rhs) {
+    // if (head == NULL || rhs == NULL) return;
+    if (head->first == NULL) {
+        head->first = rhs;
+    } else {
+        head->last->next = rhs;
+    }
+    head->last = rhs;
+    head->count++;
+}
+void insertGrammerElement(GrammerElementHead* head, GrammerElement* ge) {
+    // if (head == NULL || rhs == NULL) return;
+    if (head->first == NULL) {
+        head->first = ge;
+    } else {
+        head->last->next = ge;
+    }
+    head->last = ge;
+    head->count++;
+}
+
+//assign Grammerelement head to RHS 
 
 int main(int argc, char const *argv[]){
 
