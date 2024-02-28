@@ -12,7 +12,7 @@ remaining_list = TK_COMMA parameter_list | ∈
 stmts = typeDefinitions declarations otherStmts returnStmt
 typeDefinitions = typeDefinition typeDefinitions | definetypestmt typeDefinitions | ∈
 typeDefinition = TK_RECORD TK_RUID fieldDefinitions TK_ENDRECORD
-typeDefinition =TK_UNION TK_RUID fieldDefinitions TK_ENDUNION
+typeDefinition = TK_UNION TK_RUID fieldDefinitions TK_ENDUNION
 fieldDefinitions = fieldDefinitionfieldDefinitionmoreFields
 fieldDefinition = TK_TYPE dataType TK_COLON TK_FIELDID TK_SEM
 moreFields = fieldDefinitionmoreFields | ∈
@@ -21,7 +21,7 @@ declaration = TK_TYPE dataType TK_COLON TK_ID global_or_not
 TK_SEM
 global_or_not = TK_COLON TK_GLOBAL | ∈
 otherStmts = stmt otherStmts | ∈
-stmt = assignmentStmt | iterativeStmt | conditionalStmt | ioStmt funCallStmt
+stmt = assignmentStmt | iterativeStmt | conditionalStmt | ioStmt | funCallStmt
 assignmentStmt = SingleOrRecId TK_ASSIGNOP arithmeticExpression TK_SEM
 singleOrRecId =TK_ID B 
 B = TK_DOT TK_FIELDID B | ∈
