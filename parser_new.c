@@ -84,7 +84,7 @@ void insertInHashTable(NONTERMINAL nt, RHSHead* rhsHead){
     LHSmap[index] = rhsHead;
 }
 
-void intialiseGrammer(){
+void intialiseGrammer() {
     // <program> ===> <otherFunctions> <mainFunction>
     RHSHead* tempRHProgram = createRHSHead();
 
