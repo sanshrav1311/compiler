@@ -1,9 +1,13 @@
 // # define EPSILON 'ε'
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <stdbool.h>
+# define NO_OF_KEYWORDS 28
+# define HASH_TABLE_SIZE 1e9+7
 //epsilon is left
 //REAL NUM FIX
+
+
 
 typedef enum TOKENS {TK_ERROR, TK_ASSIGNOP, TK_COMMENT, TK_FIELDID, TK_ID, TK_NUM, TK_RNUM, TK_FUNID, TK_RUID, TK_WITH, TK_PARAMETERS, TK_END, TK_WHILE, TK_UNION, TK_ENDUNION, TK_DEFINETYPE, TK_AS, TK_TYPE, TK_MAIN, TK_GLOBAL, TK_PARAMETER, TK_LIST, TK_SQL, TK_SQR, TK_INPUT, TK_OUTPUT, TK_INT, TK_REAL, TK_COMMA, TK_SEM, TK_COLON, TK_DOT, TK_ENDWHILE, TK_OP, TK_CL, TK_IF, TK_THEN, TK_ENDIF, TK_READ, TK_WRITE, TK_RETURN, TK_PLUS, TK_MINUS, TK_MUL, TK_DIV, TK_CALL, TK_RECORD, TK_ENDRECORD, TK_ELSE, TK_AND, TK_OR, TK_NOT, TK_LT, TK_LE, TK_EQ, TK_GT, TK_GE, TK_NE, dollar} TOKENS;
 const char* tokenToString(TOKENS token) {
@@ -69,6 +73,69 @@ const char* tokenToString(TOKENS token) {
         default: return "Unknown";
     }
 }
+
+typedef struct keyword{
+    char key[31];
+    keyword* next;
+}keyword;
+
+keyword* LookupTable[1e9+7] = { NULL };
+
+keyword* createKeyword(char* s){
+    keyword* newKeyword = (keyword*) malloc(sizeof(keyword));
+    for(int i = 0; i < strlen(s); i++){
+        newKeyword->key[i] = s[i];
+    }
+    newKeyword->key[strlen(s)] = '\0';
+    newKeyword->next = NULL;
+}
+
+void insertLookupTable(char* s){
+    int index;
+    index = hashVal(s);
+    if(LookupTable[index] == NULL){
+        LookupTable[index] = createKeyword(s);
+    }
+    else {
+        keyword* new = createKeyword(s);
+        new->next = LookupTable[index];
+        LookupTable[index]->next = new;
+    }
+}
+bool findLookupTable(char* s){
+    int index=hashVal(s);
+    keyword* current = LookupTable[index];
+    while(current != NULL){
+        if(strcmp(current->key, s) == 0) return true;
+        current = current->next;
+    }
+    return false;
+}
+
+void initializeVal(){
+    char* keywords[] = {"with", "parameters", "end", "while", "union", "endunion", "definetype", "as", "type", "_main", "global", "parameter", "list", "input", "output", "int", "real", "endwhile", "if", "then", "endif", "read", "write", "return", "call", "record", "endrecord", "else"};
+    for(int i = 0; i < NO_OF_KEYWORDS; i++){
+        insertLookupTable(keywords[i]);
+    }
+}
+
+int hashVal(char* s){
+        long long p = 27, m = 1e9 + 7;
+    long long hash = 0;
+   
+    int n = strlen(s);
+    for(int i = 0; i < n; i++) {
+        int valadd;
+        if(s[i] == '_') valadd = 27;
+        else valadd = s[i] - 'a';
+        hash = (hash*27 + valadd)%m;
+    }
+    //return hash;
+   return hash%NO_OF_KEYWORDS;
+}
+
+
+
 
 typedef struct TOKEN {
     int line;
