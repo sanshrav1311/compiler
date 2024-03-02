@@ -920,16 +920,17 @@ COUNT FOLLOW[GRAMMER_TABLE_SIZE];
 bool isFIRST(NONTERMINAL nt, TOKENS t);
 bool isFOLLOW(NONTERMINAL nt, TOKENS t);
 
-bool GrammerRuleHasFirst(RHS* rhs, TOKENS t){
-    GrammerElement *geCurrent = rhs->first;
+bool GrammerRuleHasFirst(GrammerElement* geCurrent, TOKENS t){
     if(geCurrent->isTerminal == true) {
         if(geCurrent->TNT.Terminal == t) return true;
         else return false;
     }
     else if(geCurrent->isTerminal == false){
         if(isFIRST(geCurrent->TNT.NonTerminal, t)) return true;
-        else return isFOLLOW(geCurrent->TNT.NonTerminal, t);
+        else if(isFIRST(geCurrent->TNT.NonTerminal, -1)) return(geCurrent->next, t);
+        return false;
     }
+    return false;
 }
 
 RHS* GrammerRule(NONTERMINAL nt, TOKENS t){
@@ -937,10 +938,16 @@ RHS* GrammerRule(NONTERMINAL nt, TOKENS t){
     RHS *current = Grammer[hash(nt)]->first;
     GrammerElement *geCurrent = current->first;
     while(current->next != NULL){
-        if(GrammerRuleHasFirst(current, t)) return current;
+        if(GrammerRuleHasFirst(geCurrent, t)) return current;
         current = current->next;
     }
     return current;
+}
+
+RHS* findEpsilonRule(RHSHead* rhsHead){
+    RHS* curr = rhsHead->first;
+    while(curr->count != 0) curr = curr->next;
+    return curr;
 }
 
 RHS* PREDICTIVE_PARSE_TABLE[GRAMMER_TABLE_SIZE][TERMINALS_SIZE] = { NULL };
@@ -953,7 +960,7 @@ void intialisePredictiveParseTable(){
             else {
                 for(int k = 0; k < FOLLOW[i].count; k++){
                     int terminal = FOLLOW[i].firstOrFollow[k];
-                    PREDICTIVE_PARSE_TABLE[i][terminal] = Grammer[i]->last;
+                    PREDICTIVE_PARSE_TABLE[i][terminal] = findEpsilonRule(Grammer[i]);
                 }
             }
         }
