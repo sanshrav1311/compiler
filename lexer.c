@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 # define NO_OF_KEYWORDS 28
-# define HASH_TABLE_SIZE 1000000007
+# define HASH_TABLE_SIZE 100000007
+
+FILE *output_file; // Declare a file pointer
+
 
 typedef enum TOKENS {TK_ERROR, TK_ASSIGNOP, TK_COMMENT, TK_FIELDID, TK_ID, TK_NUM, TK_RNUM, TK_FUNID, TK_RUID, TK_WITH, TK_PARAMETERS, TK_END, TK_WHILE, TK_UNION, TK_ENDUNION, TK_DEFINETYPE, TK_AS, TK_TYPE, TK_MAIN, TK_GLOBAL, TK_PARAMETER, TK_LIST, TK_SQL, TK_SQR, TK_INPUT, TK_OUTPUT, TK_INT, TK_REAL, TK_COMMA, TK_SEM, TK_COLON, TK_DOT, TK_ENDWHILE, TK_OP, TK_CL, TK_IF, TK_THEN, TK_ENDIF, TK_READ, TK_WRITE, TK_RETURN, TK_PLUS, TK_MINUS, TK_MUL, TK_DIV, TK_CALL, TK_RECORD, TK_ENDRECORD, TK_ELSE, TK_AND, TK_OR, TK_NOT, TK_LT, TK_LE, TK_EQ, TK_GT, TK_GE, TK_NE, dollar, nf} TOKENS;
 const char* tokenToString(TOKENS token) {
@@ -103,10 +107,24 @@ TOKENS getTokenFromString(const char *input) {
 
 typedef struct keyword{
     char key[31];
-    keyword* next;
+    struct keyword* next;
 }keyword;
 
 keyword* LookupTable[HASH_TABLE_SIZE] = { NULL };
+
+int hashVal(char* s){
+    long long p = 27, m = HASH_TABLE_SIZE;
+    long long hash = 0;
+   
+    int n = strlen(s);
+    for(int i = 0; i < n; i++) {
+        int valAdd;
+        if(s[i] == '_') valAdd = 27;
+        else valAdd = s[i] - 'a';
+        hash = (hash*27 + valAdd)%m;
+    }
+    return hash%m;
+}
 
 keyword* createKeyword(char* s){
     keyword* newKeyword = (keyword*) malloc(sizeof(keyword));
@@ -146,21 +164,6 @@ void initializeLookupTable(){
     }
 }
 
-int hashVal(char* s){
-        long long p = 27, m = 1e9 + 7;
-    long long hash = 0;
-   
-    int n = strlen(s);
-    for(int i = 0; i < n; i++) {
-        int valadd;
-        if(s[i] == '_') valadd = 27;
-        else valadd = s[i] - 'a';
-        hash = (hash*27 + valadd)%m;
-    }
-    //return hash;
-   return hash%NO_OF_KEYWORDS;
-}
-
 typedef struct TOKEN {
     int line;
     char lexeme[21474837]; //lexeme[21];
@@ -170,7 +173,7 @@ typedef struct TOKEN {
 TOKEN* currToken;
 
 int state = 0;
-int lineNumber = 0;
+int lineNumber = 1;
 char currLexeme[21474837];
 int currLexemeSize = 0;
 
@@ -190,19 +193,19 @@ void retract(FILE* file_ptr, long int steps){
     currLexeme[currLexemeSize] = '\0';
 }
 
-void printToken(TOKEN *token){
+void printToken(TOKEN *token){ // lineNumber lexeme token
     if(token->tokenName == TK_ID && currLexemeSize > 20){
-        printf("%d too long %s\n", token->line, tokenToString(TK_ERROR));
+        fprintf(output_file,"%d too long %s\n", token->line, tokenToString(TK_ERROR));
     }
     else if(token->tokenName == TK_FIELDID && currLexemeSize > 30){
-        printf("%d too long %s\n", token->line, tokenToString(TK_ERROR));
+        fprintf(output_file,"%d too long %s\n", token->line, tokenToString(TK_ERROR));
     }
     else if(currLexemeSize > 0){
-        printf("%d ", token->line);
+        fprintf(output_file,"%d ", token->line);
         for(int i = 0; i < currLexemeSize; i++){
-            printf("%c", token->lexeme[i]);
+            fprintf(output_file,"%c", token->lexeme[i]);
         }
-        printf(" %s\n", tokenToString(token->tokenName));
+        fprintf(output_file," %s\n", tokenToString(token->tokenName));
     }
     state = 0;
     currLexemeSize = 0;
@@ -216,6 +219,7 @@ void printError(){
 
 int main(int argc, char const *argv[])
 {
+    output_file = fopen("lexer_output.txt", "wb");
     initializeLookupTable();
     FILE *file;
     file = fopen(argv[1], "rb");
@@ -399,9 +403,11 @@ int main(int argc, char const *argv[])
                     if(c != '\n') state = 6;
                     else if(c == '\n'){
                         currToken = createToken(TK_COMMENT);
+                        currLexemeSize--;
                         printToken(currToken);
                         currLexemeSize = 0;
                         state = 0;
+                        lineNumber++;
                     }
                     break;
                 case 7:
@@ -633,8 +639,10 @@ int main(int argc, char const *argv[])
                 default:
                     break;
         }
-        if(c == '\n') lineNumber++;
+        // if(c == '\n') lineNumber++;
     } while(c != EOF);
 
+    fclose(output_file);
+    fclose(file);
     return 0;
 }

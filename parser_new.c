@@ -134,6 +134,7 @@ void insertRHS(RHSHead* head, RHS* rhs) {
     head->last = rhs;
     head->count++;
 }
+
 void insertGrammerElement(RHS* head, GrammerElement* ge) {
     if (head->first == NULL) {
         head->first = ge;
@@ -909,7 +910,7 @@ void intialiseGrammer() {
     insertInHashTable(A, tempRHA);
 
 }
-    
+
 //epsilon = -1
 typedef struct COUNT{
     int count;
@@ -951,6 +952,46 @@ RHS* findEpsilonRule(RHSHead* rhsHead){
     return curr;
 }
 
+typedef struct ParseStackElement {
+    GrammerElement* grammerElement;
+    struct ParseStackElement* next;
+} ParseStackElement;
+
+typedef struct ParseStack {
+    int count;
+    struct ParseStackElement* first;
+} ParseStack;
+
+ParseStack* createParseStack(){
+    ParseStack* stack = (ParseStack*)malloc(sizeof(ParseStack));
+    stack->count=0;
+    stack->first=NULL;
+    return stack;
+}
+
+ParseStackElement* createParseStackElement(GrammerElement* ge){
+    ParseStackElement* new = (ParseStackElement*)malloc(sizeof(ParseStackElement));
+    new->next = NULL;
+    new->grammerElement = ge;
+}
+
+void pushInStack(ParseStack* head, GrammerElement* ge){
+    ParseStackElement* new = createParseStackElement(ge);
+    new->next = head->first;
+    head->first = new;
+    head->count++;
+}
+
+void popFromStack(ParseStack* head){
+    GrammerElement* popcorned = head->first;
+    head->first = head->first->next;
+    head->count--;
+}
+
+GrammerElement* peekInStack(ParseStack* head){
+    return head->first;
+}
+
 RHS* PREDICTIVE_PARSE_TABLE[GRAMMER_TABLE_SIZE][TERMINALS_SIZE] = { NULL };
 void intialisePredictiveParseTable(){
     for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){ // iterate through all non terminals
@@ -970,6 +1011,7 @@ void intialisePredictiveParseTable(){
 
 int main(int argc, char const *argv[]){
     intialiseGrammer();
+    FILE* file = fopen("output_file.txt", "rb");
 
     return 0;
 }
