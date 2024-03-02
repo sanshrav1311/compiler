@@ -4,10 +4,76 @@
 #define GRAMMER_TABLE_SIZE 64
 #define TERMINALS_SIZE 59
 
-typedef enum NONTERMINAL {program, mainFunction, otherFunctions, function, input_par, output_par, parameter_list, dataType, primitiveDatatype, constructedDatatype, remaining_list, stmts, typeDefinitions, typeDefinition, fieldDefinitions, fieldDefinition, moreFields, declarations, delaration, otherStmts, stmt, assignmentStmt, singleOrRecId, B,funCallStmt, outputParameters, inputParameters, iterativeStmt, conditionalStmt, ioStmt, aritmeticExpression, addORsub, mulORdiv, brackets, MULDIV, ADDSUB, booleanExpression, var, logicalOp, relationalOp, returnStmt, optionalReturn, idList, more_ids, definetypestmt, A, actualOrRedefined, fieldType, declaration, global_or_not, SingleOrRecId, arithmeticExpression, option_single_constructed, oneExpansion, moreExpansions, elsePart, term, expPrime, lowPrecedenceOperators, factor, termPrime, highPrecedenceOperators} NONTERMINAL;
+typedef enum NONTERMINAL {program, mainFunction, otherFunctions, function, input_par, output_par, parameter_list, dataType, primitiveDatatype, constructedDatatype, remaining_list, stmts, typeDefinitions, typeDefinition, fieldDefinitions, fieldDefinition, moreFields, declarations, declaration, otherStmts, stmt, assignmentStmt, singleOrRecId, B, funCallStmt, outputParameters, inputParameters, iterativeStmt, conditionalStmt, ioStmt, addORsub, mulORdiv, brackets, MULDIV, ADDSUB, booleanExpression, var, logicalOp, relationalOp, returnStmt, optionalReturn, idList, more_ids, definetypestmt, A, actualOrRedefined, fieldType, global_or_not, SingleOrRecId, arithmeticExpression, option_single_constructed, oneExpansion, moreExpansions, elsePart, term, expPrime, lowPrecedenceOperators, factor, termPrime, highPrecedenceOperators} NONTERMINAL;
 typedef enum TOKENS {TK_ERROR, TK_ASSIGNOP, TK_COMMENT, TK_FIELDID, TK_ID, TK_NUM, TK_RNUM, TK_FUNID, TK_RUID, TK_WITH, TK_PARAMETERS, TK_END, TK_WHILE, TK_UNION, TK_ENDUNION, TK_DEFINETYPE, TK_AS, TK_TYPE, TK_MAIN, TK_GLOBAL, TK_PARAMETER, TK_LIST, TK_SQL, TK_SQR, TK_INPUT, TK_OUTPUT, TK_INT, TK_REAL, TK_COMMA, TK_SEM, TK_COLON, TK_DOT, TK_ENDWHILE, TK_OP, TK_CL, TK_IF, TK_THEN, TK_ENDIF, TK_READ, TK_WRITE, TK_RETURN, TK_PLUS, TK_MINUS, TK_MUL, TK_DIV, TK_CALL, TK_RECORD, TK_ENDRECORD, TK_ELSE, TK_AND, TK_OR, TK_NOT, TK_LT, TK_LE, TK_EQ, TK_GT, TK_GE, TK_NE, dollar} TOKENS;
 int hash(NONTERMINAL nt){
     return nt % GRAMMER_TABLE_SIZE;
+}
+
+const char* nonterminalToString(NONTERMINAL nonterminal) {
+    switch(nonterminal) {
+        case program: return "program";
+        case mainFunction: return "mainFunction";
+        case otherFunctions: return "otherFunctions";
+        case function: return "function";
+        case input_par: return "input_par";
+        case output_par: return "output_par";
+        case parameter_list: return "parameter_list";
+        case dataType: return "dataType";
+        case primitiveDatatype: return "primitiveDatatype";
+        case constructedDatatype: return "constructedDatatype";
+        case remaining_list: return "remaining_list";
+        case stmts: return "stmts";
+        case typeDefinitions: return "typeDefinitions";
+        case typeDefinition: return "typeDefinition";
+        case fieldDefinitions: return "fieldDefinitions";
+        case fieldDefinition: return "fieldDefinition";
+        case moreFields: return "moreFields";
+        case declarations: return "declarations";
+        case declaration: return "declaration";
+        case otherStmts: return "otherStmts";
+        case stmt: return "stmt";
+        case assignmentStmt: return "assignmentStmt";
+        case singleOrRecId: return "singleOrRecId";
+        case B: return "B";
+        case funCallStmt: return "funCallStmt";
+        case outputParameters: return "outputParameters";
+        case inputParameters: return "inputParameters";
+        case iterativeStmt: return "iterativeStmt";
+        case conditionalStmt: return "conditionalStmt";
+        case ioStmt: return "ioStmt";
+        case arithmeticExpression: return "arithmeticExpression";
+        case addORsub: return "addORsub";
+        case mulORdiv: return "mulORdiv";
+        case brackets: return "brackets";
+        case MULDIV: return "MULDIV";
+        case ADDSUB: return "ADDSUB";
+        case booleanExpression: return "booleanExpression";
+        case var: return "var";
+        case logicalOp: return "logicalOp";
+        case relationalOp: return "relationalOp";
+        case returnStmt: return "returnStmt";
+        case optionalReturn: return "optionalReturn";
+        case idList: return "idList";
+        case more_ids: return "more_ids";
+        case definetypestmt: return "definetypestmt";
+        case A: return "A";
+        case actualOrRedefined: return "actualOrRedefined";
+        case fieldType: return "fieldType";
+        case global_or_not: return "global_or_not";
+        case SingleOrRecId: return "SingleOrRecId";
+        case option_single_constructed: return "option_single_constructed";
+        case oneExpansion: return "oneExpansion";
+        case moreExpansions: return "moreExpansions";
+        case elsePart: return "elsePart";
+        case term: return "term";
+        case expPrime: return "expPrime";
+        case lowPrecedenceOperators: return "lowPrecedenceOperators";
+        case factor: return "factor";
+        case termPrime: return "termPrime";
+        case highPrecedenceOperators: return "highPrecedenceOperators";
+        default: return "Unknown NONTERMINAL";
+    }
 }
 
 typedef struct GrammerElement{
@@ -880,6 +946,7 @@ RHS* GrammerRule(NONTERMINAL nt, TOKENS t){
 RHS* PREDICTIVE_PARSE_TABLE[GRAMMER_TABLE_SIZE][TERMINALS_SIZE] = { NULL };
 void intialisePredictiveParseTable(){
     for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){ // iterate through all non terminals
+        if(Grammer[i] == NULL) continue;
         for(int j = 0; j < FIRST[i].count; j++){
             int terminal = FIRST[i].firstOrFollow[j];
             if(terminal != -1) PREDICTIVE_PARSE_TABLE[i][terminal] = GrammerRule(i, terminal);
