@@ -2,13 +2,13 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #define GRAMMER_TABLE_SIZE 64
+#define TERMINALS_SIZE 59
 
 typedef enum NONTERMINAL {program, mainFunction, otherFunctions, function, input_par, output_par, parameter_list, dataType, primitiveDatatype, constructedDatatype, remaining_list, stmts, typeDefinitions, typeDefinition, fieldDefinitions, fieldDefinition, moreFields, declarations, delaration, otherStmts, stmt, assignmentStmt, singleOrRecId, B,funCallStmt, outputParameters, inputParameters, iterativeStmt, conditionalStmt, ioStmt, aritmeticExpression, addORsub, mulORdiv, brackets, MULDIV, ADDSUB, booleanExpression, var, logicalOp, relationalOp, returnStmt, optionalReturn, idList, more_ids, definetypestmt, A, actualOrRedefined, fieldType, declaration, global_or_not, SingleOrRecId, arithmeticExpression, option_single_constructed, oneExpansion, moreExpansions, elsePart, term, expPrime, lowPrecedenceOperators, factor, termPrime, highPrecedenceOperators} NONTERMINAL;
-typedef enum TOKENS {TK_ERROR, TK_ASSIGNOP, TK_COMMENT, TK_FIELDID, TK_ID, TK_NUM, TK_RNUM, TK_FUNID, TK_RUID, TK_WITH, TK_PARAMETERS, TK_END, TK_WHILE, TK_UNION, TK_ENDUNION, TK_DEFINETYPE, TK_AS, TK_TYPE, TK_MAIN, TK_GLOBAL, TK_PARAMETER, TK_LIST, TK_SQL, TK_SQR, TK_INPUT, TK_OUTPUT, TK_INT, TK_REAL, TK_COMMA, TK_SEM, TK_COLON, TK_DOT, TK_ENDWHILE, TK_OP, TK_CL, TK_IF, TK_THEN, TK_ENDIF, TK_READ, TK_WRITE, TK_RETURN, TK_PLUS, TK_MINUS, TK_MUL, TK_DIV, TK_CALL, TK_RECORD, TK_ENDRECORD, TK_ELSE, TK_AND, TK_OR, TK_NOT, TK_LT, TK_LE, TK_EQ, TK_GT, TK_GE, TK_NE} TOKENS;
+typedef enum TOKENS {TK_ERROR, TK_ASSIGNOP, TK_COMMENT, TK_FIELDID, TK_ID, TK_NUM, TK_RNUM, TK_FUNID, TK_RUID, TK_WITH, TK_PARAMETERS, TK_END, TK_WHILE, TK_UNION, TK_ENDUNION, TK_DEFINETYPE, TK_AS, TK_TYPE, TK_MAIN, TK_GLOBAL, TK_PARAMETER, TK_LIST, TK_SQL, TK_SQR, TK_INPUT, TK_OUTPUT, TK_INT, TK_REAL, TK_COMMA, TK_SEM, TK_COLON, TK_DOT, TK_ENDWHILE, TK_OP, TK_CL, TK_IF, TK_THEN, TK_ENDIF, TK_READ, TK_WRITE, TK_RETURN, TK_PLUS, TK_MINUS, TK_MUL, TK_DIV, TK_CALL, TK_RECORD, TK_ENDRECORD, TK_ELSE, TK_AND, TK_OR, TK_NOT, TK_LT, TK_LE, TK_EQ, TK_GT, TK_GE, TK_NE, dollar} TOKENS;
 int hash(NONTERMINAL nt){
     return nt % GRAMMER_TABLE_SIZE;
 }
-
 
 typedef struct GrammerElement{
     bool isTerminal;
@@ -77,11 +77,11 @@ void insertGrammerElement(RHS* head, GrammerElement* ge) {
     head->count++;
 }
 
-RHSHead* LHSmap[GRAMMER_TABLE_SIZE] = { NULL };
+RHSHead* Grammer[GRAMMER_TABLE_SIZE] = { NULL };
 
 void insertInHashTable(NONTERMINAL nt, RHSHead* rhsHead){
     int index = hash(nt);
-    LHSmap[index] = rhsHead;
+    Grammer[index] = rhsHead;
 }
 
 void intialiseGrammer() {
@@ -841,6 +841,56 @@ void intialiseGrammer() {
 
     insertInHashTable(A, tempRHA);
 
+}
+
+//epsilon = -1
+typedef struct COUNT{
+    int count;
+    int *firstOrFollow;
+} COUNT;
+COUNT FIRST[GRAMMER_TABLE_SIZE];
+COUNT FOLLOW[GRAMMER_TABLE_SIZE];
+
+bool isFIRST(NONTERMINAL nt, TOKENS t);
+bool isFOLLOW(NONTERMINAL nt, TOKENS t);
+
+bool GrammerRuleHasFirst(RHS* rhs, TOKENS t){
+    GrammerElement *geCurrent = rhs->first;
+    if(geCurrent->isTerminal == true) {
+        if(geCurrent->TNT.Terminal == t) return true;
+        else return false;
+    }
+    else if(geCurrent->isTerminal == false){
+        if(isFIRST(geCurrent->TNT.NonTerminal, t)) return true;
+        else return isFOLLOW(geCurrent->TNT.NonTerminal, t);
+    }
+}
+
+RHS* GrammerRule(NONTERMINAL nt, TOKENS t){
+    int size = Grammer[hash(nt)]->count;
+    RHS *current = Grammer[hash(nt)]->first;
+    GrammerElement *geCurrent = current->first;
+    while(current->next != NULL){
+        if(GrammerRuleHasFirst(current, t)) return current;
+        current = current->next;
+    }
+    return current;
+}
+
+RHS* PREDICTIVE_PARSE_TABLE[GRAMMER_TABLE_SIZE][TERMINALS_SIZE] = { NULL };
+void intialisePredictiveParseTable(){
+    for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){ // iterate through all non terminals
+        for(int j = 0; j < FIRST[i].count; j++){
+            int terminal = FIRST[i].firstOrFollow[j];
+            if(terminal != -1) PREDICTIVE_PARSE_TABLE[i][terminal] = GrammerRule(i, terminal);
+            else {
+                for(int k = 0; k < FOLLOW[i].count; k++){
+                    int terminal = FOLLOW[i].firstOrFollow[k];
+                    PREDICTIVE_PARSE_TABLE[i][terminal] = Grammer[i]->last;
+                }
+            }
+        }
+    }
 }
 
 int main(int argc, char const *argv[]){
