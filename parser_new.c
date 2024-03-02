@@ -843,16 +843,16 @@ void intialiseGrammer() {
 
 }
 
-//epsilon = -1
-typedef struct COUNT{
-    int count;
-    int *firstOrFollow;
-} COUNT;
-COUNT FIRST[GRAMMER_TABLE_SIZE];
-COUNT FOLLOW[GRAMMER_TABLE_SIZE];
+    //epsilon = -1
+    typedef struct COUNT{
+        int count;
+        int *firstOrFollow;
+    } COUNT;
+    COUNT FIRST[GRAMMER_TABLE_SIZE];
+    COUNT FOLLOW[GRAMMER_TABLE_SIZE];
 
-bool isFIRST(NONTERMINAL nt, TOKENS t);
-bool isFOLLOW(NONTERMINAL nt, TOKENS t);
+    bool isFIRST(NONTERMINAL nt, TOKENS t);
+    bool isFOLLOW(NONTERMINAL nt, TOKENS t);
 
 bool GrammerRuleHasFirst(RHS* rhs, TOKENS t){
     GrammerElement *geCurrent = rhs->first;
