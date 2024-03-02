@@ -4,7 +4,7 @@
 # define NO_OF_KEYWORDS 28
 # define HASH_TABLE_SIZE 1000000007
 
-typedef enum TOKENS {TK_ERROR, TK_ASSIGNOP, TK_COMMENT, TK_FIELDID, TK_ID, TK_NUM, TK_RNUM, TK_FUNID, TK_RUID, TK_WITH, TK_PARAMETERS, TK_END, TK_WHILE, TK_UNION, TK_ENDUNION, TK_DEFINETYPE, TK_AS, TK_TYPE, TK_MAIN, TK_GLOBAL, TK_PARAMETER, TK_LIST, TK_SQL, TK_SQR, TK_INPUT, TK_OUTPUT, TK_INT, TK_REAL, TK_COMMA, TK_SEM, TK_COLON, TK_DOT, TK_ENDWHILE, TK_OP, TK_CL, TK_IF, TK_THEN, TK_ENDIF, TK_READ, TK_WRITE, TK_RETURN, TK_PLUS, TK_MINUS, TK_MUL, TK_DIV, TK_CALL, TK_RECORD, TK_ENDRECORD, TK_ELSE, TK_AND, TK_OR, TK_NOT, TK_LT, TK_LE, TK_EQ, TK_GT, TK_GE, TK_NE, dollar} TOKENS;
+typedef enum TOKENS {TK_ERROR, TK_ASSIGNOP, TK_COMMENT, TK_FIELDID, TK_ID, TK_NUM, TK_RNUM, TK_FUNID, TK_RUID, TK_WITH, TK_PARAMETERS, TK_END, TK_WHILE, TK_UNION, TK_ENDUNION, TK_DEFINETYPE, TK_AS, TK_TYPE, TK_MAIN, TK_GLOBAL, TK_PARAMETER, TK_LIST, TK_SQL, TK_SQR, TK_INPUT, TK_OUTPUT, TK_INT, TK_REAL, TK_COMMA, TK_SEM, TK_COLON, TK_DOT, TK_ENDWHILE, TK_OP, TK_CL, TK_IF, TK_THEN, TK_ENDIF, TK_READ, TK_WRITE, TK_RETURN, TK_PLUS, TK_MINUS, TK_MUL, TK_DIV, TK_CALL, TK_RECORD, TK_ENDRECORD, TK_ELSE, TK_AND, TK_OR, TK_NOT, TK_LT, TK_LE, TK_EQ, TK_GT, TK_GE, TK_NE, dollar, nf} TOKENS;
 const char* tokenToString(TOKENS token) {
     switch(token) {
         case TK_ERROR: return "TK_ERROR";
@@ -69,6 +69,38 @@ const char* tokenToString(TOKENS token) {
     }
 }
 
+TOKENS getTokenFromString(const char *input) {
+    if (strcmp(input, "with") == 0) return TK_WITH;
+    else if (strcmp(input, "parameters") == 0) return TK_PARAMETERS;
+    else if (strcmp(input, "end") == 0) return TK_END;
+    else if (strcmp(input, "while") == 0) return TK_WHILE;
+    else if (strcmp(input, "union") == 0) return TK_UNION;
+    else if (strcmp(input, "endunion") == 0) return TK_ENDUNION;
+    else if (strcmp(input, "definetype") == 0) return TK_DEFINETYPE;
+    else if (strcmp(input, "as") == 0) return TK_AS;
+    else if (strcmp(input, "type") == 0) return TK_TYPE;
+    else if (strcmp(input, "_main") == 0) return TK_MAIN;
+    else if (strcmp(input, "global") == 0) return TK_GLOBAL;
+    else if (strcmp(input, "parameter") == 0) return TK_PARAMETER;
+    else if (strcmp(input, "list") == 0) return TK_LIST;
+    else if (strcmp(input, "input") == 0) return TK_INPUT;
+    else if (strcmp(input, "output") == 0) return TK_OUTPUT;
+    else if (strcmp(input, "int") == 0) return TK_INT;
+    else if (strcmp(input, "real") == 0) return TK_REAL;
+    else if (strcmp(input, "endwhile") == 0) return TK_ENDWHILE;
+    else if (strcmp(input, "if") == 0) return TK_IF;
+    else if (strcmp(input, "then") == 0) return TK_THEN;
+    else if (strcmp(input, "endif") == 0) return TK_ENDIF;
+    else if (strcmp(input, "read") == 0) return TK_READ;
+    else if (strcmp(input, "write") == 0) return TK_WRITE;
+    else if (strcmp(input, "return") == 0) return TK_RETURN;
+    else if (strcmp(input, "call") == 0) return TK_CALL;
+    else if (strcmp(input, "record") == 0) return TK_RECORD;
+    else if (strcmp(input, "endrecord") == 0) return TK_ENDRECORD;
+    else if (strcmp(input, "else") == 0) return TK_ELSE;
+    else return nf;
+}
+
 typedef struct keyword{
     char key[31];
     keyword* next;
@@ -107,7 +139,7 @@ bool findLookupTable(char* s){
     return false;
 }
 
-void initializeVal(){
+void initializeLookupTable(){
     char* keywords[] = {"with", "parameters", "end", "while", "union", "endunion", "definetype", "as", "type", "_main", "global", "parameter", "list", "input", "output", "int", "real", "endwhile", "if", "then", "endif", "read", "write", "return", "call", "record", "endrecord", "else"};
     for(int i = 0; i < NO_OF_KEYWORDS; i++){
         insertLookupTable(keywords[i]);
@@ -155,6 +187,7 @@ TOKEN* createToken(TOKENS token){
 void retract(FILE* file_ptr, long int steps){
     fseek(file_ptr, steps * (long int)-1, SEEK_CUR);
     currLexemeSize--;
+    currLexeme[currLexemeSize] = '\0';
 }
 
 void printToken(TOKEN *token){
@@ -183,6 +216,7 @@ void printError(){
 
 int main(int argc, char const *argv[])
 {
+    initializeLookupTable();
     FILE *file;
     file = fopen(argv[1], "rb");
     char c;
@@ -192,6 +226,7 @@ int main(int argc, char const *argv[])
         c = (char)fgetc(file);
         currLexeme[currLexemeSize] = c;
         currLexemeSize++;
+        currLexeme[currLexemeSize] = '\0';
         switch(state){
             case 0:
                 switch(c){
@@ -411,7 +446,12 @@ int main(int argc, char const *argv[])
                     else if(c >= '2' && c <= '7') state = 20;
                     else {
                         retract(file, 1);
-                        currToken = createToken(TK_FIELDID);
+                        TOKENS tempToken = TK_FIELDID;
+                        if(findLookupTable(currLexeme)){
+                            tempToken = getTokenFromString(currLexeme); 
+                        }
+                        if(tempToken == nf) tempToken = TK_FIELDID;
+                        currToken = createToken(tempToken);
                         printToken(currToken);
                         currLexemeSize = 0;
                     }
@@ -419,7 +459,12 @@ int main(int argc, char const *argv[])
                 case 12:
                     if(c < 'a' || c > 'z') {
                         retract(file, 1);
-                        currToken = createToken(TK_FIELDID);
+                        TOKENS tempToken = TK_FIELDID;
+                        if(findLookupTable(currLexeme)){
+                            tempToken = getTokenFromString(currLexeme); 
+                        }
+                        if(tempToken == nf) tempToken = TK_FIELDID;
+                        currToken = createToken(tempToken);
                         printToken(currToken);
                         currLexemeSize = 0;
                     }
@@ -470,7 +515,12 @@ int main(int argc, char const *argv[])
                     else if(c >= '0' && c <= '9') state = 22;
                     else {
                         retract(file, 1);
-                        currToken = createToken(TK_FUNID);
+                        TOKENS tempToken = TK_FUNID;
+                        if(findLookupTable(currLexeme)){
+                            tempToken = getTokenFromString(currLexeme); 
+                        }
+                        if(tempToken == nf) tempToken = TK_FUNID;
+                        currToken = createToken(tempToken);
                         printToken(currToken);
                         currLexemeSize = 0;
                     }
@@ -511,7 +561,12 @@ int main(int argc, char const *argv[])
                     if(c >= '0' && c <= '9') state = 22;
                     else {
                         retract(file, 1);
-                        currToken = createToken(TK_FUNID);
+                        TOKENS tempToken = TK_FUNID;
+                        if(findLookupTable(currLexeme)){
+                            tempToken = getTokenFromString(currLexeme); 
+                        }
+                        if(tempToken == nf) tempToken = TK_FUNID;
+                        currToken = createToken(tempToken);
                         printToken(currToken);
                         currLexemeSize = 0;
                     }
