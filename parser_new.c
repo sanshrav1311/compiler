@@ -944,23 +944,50 @@ TerminalNode* ComputeFirst(NONTERMINAL nt){
     if(Grammer[nt] == NULL) return NULL;
     if(FIRST[nt] != NULL) return FIRST[nt];
     RHS* rhsCurr = Grammer[nt]->first;
+    GrammerElement* geCurr = rhsCurr->first;
     while(rhsCurr != NULL){
-        if(rhsCurr->first == NULL) insertFirstFollow(FIRST, nt, -1);
-        else if(rhsCurr->first->isTerminal == true) insertFirstFollow(FIRST, nt, rhsCurr->first->TNT.Terminal);
-        else {
-            TerminalNode* toCopy = ComputeFirst(rhsCurr->first->TNT.NonTerminal);
-            while (toCopy != NULL){
-                insertFirstFollow(FIRST, nt, toCopy->terminal);
-                toCopy = toCopy->next;
-            }         
+        if(geCurr == NULL) {
+            insertFirstFollow(FIRST, nt, -1);
+            continue;
+        }
+        bool epsilonFound = true;
+        while (epsilonFound == true){
+            epsilonFound = false;
+            if(geCurr->isTerminal == true) insertFirstFollow(FIRST, nt, geCurr->TNT.Terminal);
+            else {
+                TerminalNode* toCopy = ComputeFirst(geCurr->TNT.NonTerminal);
+                while (toCopy != NULL && geCurr != NULL){
+                    if(toCopy->terminal != -1) insertFirstFollow(FIRST, nt, toCopy->terminal);
+                    else{
+                        epsilonFound = true;
+                        geCurr = geCurr->next;
+                    }
+                    toCopy = toCopy->next;
+                }         
+            }
         }
         rhsCurr = rhsCurr->next;
     }
     return FIRST[nt];
 }
 
-bool isFIRST(NONTERMINAL nt, TOKENS t);
-bool isFOLLOW(NONTERMINAL nt, TOKENS t);
+bool isFIRST(NONTERMINAL nt, TOKENS t){
+    TerminalNode* curr = FIRST[nt];
+    while(curr != NULL){
+        if(curr->terminal == t) return true;
+        curr = curr->next;
+    }
+    return false;
+}
+
+bool isFOLLOW(NONTERMINAL nt, TOKENS t){
+    TerminalNode* curr = FOLLOW[nt];
+    while(curr != NULL){
+        if(curr->terminal == t) return true;
+        curr = curr->next;
+    }
+    return false;
+}
 
 bool GrammerRuleHasFirst(GrammerElement* geCurrent, TOKENS t){
     if(geCurrent->isTerminal == true) {
