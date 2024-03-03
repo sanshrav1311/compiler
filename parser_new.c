@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#define GRAMMER_TABLE_SIZE 64
+#define GRAMMER_TABLE_SIZE 53
 #define TERMINALS_SIZE 59
 
-typedef enum NONTERMINAL {program, mainFunction, otherFunctions, function, input_par, output_par, parameter_list, dataType, primitiveDatatype, constructedDatatype, remaining_list, stmts, typeDefinitions, typeDefinition, fieldDefinitions, fieldDefinition, moreFields, declarations, declaration, otherStmts, stmt, assignmentStmt, singleOrRecId, B, funCallStmt, outputParameters, inputParameters, iterativeStmt, conditionalStmt, ioStmt, addORsub, mulORdiv, brackets, MULDIV, ADDSUB, booleanExpression, var, logicalOp, relationalOp, returnStmt, optionalReturn, idList, more_ids, definetypestmt, A, actualOrRedefined, fieldType, global_or_not, SingleOrRecId, arithmeticExpression, option_single_constructed, oneExpansion, moreExpansions, elsePart, term, expPrime, lowPrecedenceOperators, factor, termPrime, highPrecedenceOperators} NONTERMINAL;
-typedef enum TOKENS {TK_ERROR, TK_ASSIGNOP, TK_COMMENT, TK_FIELDID, TK_ID, TK_NUM, TK_RNUM, TK_FUNID, TK_RUID, TK_WITH, TK_PARAMETERS, TK_END, TK_WHILE, TK_UNION, TK_ENDUNION, TK_DEFINETYPE, TK_AS, TK_TYPE, TK_MAIN, TK_GLOBAL, TK_PARAMETER, TK_LIST, TK_SQL, TK_SQR, TK_INPUT, TK_OUTPUT, TK_INT, TK_REAL, TK_COMMA, TK_SEM, TK_COLON, TK_DOT, TK_ENDWHILE, TK_OP, TK_CL, TK_IF, TK_THEN, TK_ENDIF, TK_READ, TK_WRITE, TK_RETURN, TK_PLUS, TK_MINUS, TK_MUL, TK_DIV, TK_CALL, TK_RECORD, TK_ENDRECORD, TK_ELSE, TK_AND, TK_OR, TK_NOT, TK_LT, TK_LE, TK_EQ, TK_GT, TK_GE, TK_NE, dollar, nf} TOKENS;
+typedef enum NONTERMINAL {program, mainFunction, otherFunctions, function, input_par, output_par, parameter_list, remaining_list, declaration, dataType, primitiveDatatype, constructedDatatype, stmts, typeDefinitions, actualOrRedefined, typeDefinition, fieldDefinitions, fieldDefinition, fieldType, moreFields, declarations, global_or_not, iterativeStmt, conditionalStmt, elsePart, otherStmts, stmt, assignmentStmt, ioStmt, term, termPrime, factor, var, arithmeticExpression, expPrime, singleOrRecId, option_single_constructed, oneExpansion, moreExpansions, funCallStmt, outputParameters, inputParameters, lowPrecedenceOperators, highPrecedenceOperators, booleanExpression, logicalOp, relationalOp, returnStmt, optionalReturn, idList, more_ids, definetypestmt, A} NONTERMINAL;
+typedef enum TOKENS {TK_ERROR, TK_ASSIGNOP, TK_COMMENT, TK_FIELDID, TK_ID, TK_NUM, TK_RNUM, TK_FUNID, TK_RUID, TK_WITH, TK_PARAMETERS, TK_END, TK_WHILE, TK_UNION, TK_ENDUNION, TK_DEFINETYPE, TK_AS, TK_TYPE, TK_MAIN, TK_GLOBAL, TK_PARAMETER, TK_LIST, TK_SQL, TK_SQR, TK_INPUT, TK_OUTPUT, TK_INT, TK_REAL, TK_COMMA, TK_SEM, TK_COLON, TK_DOT, TK_ENDWHILE, TK_OP, TK_CL, TK_IF, TK_THEN, TK_ENDIF, TK_READ, TK_WRITE, TK_RETURN, TK_PLUS, TK_MINUS, TK_MUL, TK_DIV, TK_CALL, TK_RECORD, TK_ENDRECORD, TK_ELSE, TK_AND, TK_OR, TK_NOT, TK_LT, TK_LE, TK_EQ, TK_GT, TK_GE, TK_NE, dollar, nf, synch} TOKENS;
 
 int hash(NONTERMINAL nt){
     return nt % GRAMMER_TABLE_SIZE;
@@ -36,7 +36,6 @@ const char* nonterminalToString(NONTERMINAL nonterminal) {
         case stmt: return "stmt";
         case assignmentStmt: return "assignmentStmt";
         case singleOrRecId: return "singleOrRecId";
-        case B: return "B";
         case funCallStmt: return "funCallStmt";
         case outputParameters: return "outputParameters";
         case inputParameters: return "inputParameters";
@@ -44,11 +43,6 @@ const char* nonterminalToString(NONTERMINAL nonterminal) {
         case conditionalStmt: return "conditionalStmt";
         case ioStmt: return "ioStmt";
         case arithmeticExpression: return "arithmeticExpression";
-        case addORsub: return "addORsub";
-        case mulORdiv: return "mulORdiv";
-        case brackets: return "brackets";
-        case MULDIV: return "MULDIV";
-        case ADDSUB: return "ADDSUB";
         case booleanExpression: return "booleanExpression";
         case var: return "var";
         case logicalOp: return "logicalOp";
@@ -62,7 +56,6 @@ const char* nonterminalToString(NONTERMINAL nonterminal) {
         case actualOrRedefined: return "actualOrRedefined";
         case fieldType: return "fieldType";
         case global_or_not: return "global_or_not";
-        case SingleOrRecId: return "SingleOrRecId";
         case option_single_constructed: return "option_single_constructed";
         case oneExpansion: return "oneExpansion";
         case moreExpansions: return "moreExpansions";
@@ -76,6 +69,8 @@ const char* nonterminalToString(NONTERMINAL nonterminal) {
         default: return "Unknown NONTERMINAL";
     }
 }
+
+int ntCount[GRAMMER_TABLE_SIZE] = {0}; // for constructing follow such that it does not go into a recursive loop;
 
 typedef struct GrammerElement{
     bool isTerminal;
@@ -496,7 +491,7 @@ void intialiseGrammer() {
     // SingleOrRecId, arithmeticExpression, option_single_constructed,oneExpansion, moreExpansions
 
     RHS* tempRAssignmentStmt = createRHSNode();
-    insertGrammerElement(tempRAssignmentStmt, createGrammerElement(false, (NONTERMINAL)SingleOrRecId));
+    insertGrammerElement(tempRAssignmentStmt, createGrammerElement(false, (NONTERMINAL)singleOrRecId));
     insertGrammerElement(tempRAssignmentStmt, createGrammerElement(true, (TOKENS)TK_ASSIGNOP));
     insertGrammerElement(tempRAssignmentStmt, createGrammerElement(false, (NONTERMINAL)arithmeticExpression));
     insertGrammerElement(tempRAssignmentStmt, createGrammerElement(true, (TOKENS)TK_SEM));
@@ -512,7 +507,7 @@ void intialiseGrammer() {
     insertGrammerElement(tempRSingleOrRecId, createGrammerElement(false, (NONTERMINAL)option_single_constructed));
     insertRHS(tempRHSingleOrRecId, tempRSingleOrRecId);
 
-    insertInHashTable(SingleOrRecId, tempRHSingleOrRecId);
+    insertInHashTable(singleOrRecId, tempRHSingleOrRecId);
 
     // <option_single_constructed>===> ε | <oneExpansion><moreExpansions>
     RHSHead* tempRHOptionSingleConstructed = createRHSHead();
@@ -780,7 +775,7 @@ void intialiseGrammer() {
     RHSHead* tempRHVar = createRHSHead();
 
     RHS* tempRVar1 = createRHSNode();
-    insertGrammerElement(tempRVar1, createGrammerElement(false, (NONTERMINAL)SingleOrRecId));
+    insertGrammerElement(tempRVar1, createGrammerElement(false, (NONTERMINAL)singleOrRecId));
     insertRHS(tempRHVar, tempRVar1);
 
     RHS* tempRVar2 = createRHSNode();
@@ -911,15 +906,6 @@ void intialiseGrammer() {
 
 }
 
-//epsilon = -1
-// typedef struct COUNT{
-//     int count;
-//     int *firstOrFollow;
-// } COUNT;
-// COUNT FIRST[GRAMMER_TABLE_SIZE];
-// COUNT FOLLOW[GRAMMER_TABLE_SIZE];
-
-
 typedef struct TerminalNode {
     int terminal;
     struct TerminalNode* next;
@@ -944,10 +930,11 @@ TerminalNode* ComputeFirst(NONTERMINAL nt){
     if(Grammer[nt] == NULL) return NULL;
     if(FIRST[nt] != NULL) return FIRST[nt];
     RHS* rhsCurr = Grammer[nt]->first;
-    GrammerElement* geCurr = rhsCurr->first;
     while(rhsCurr != NULL){
+        GrammerElement* geCurr = rhsCurr->first;
         if(geCurr == NULL) {
             insertFirstFollow(FIRST, nt, -1);
+            rhsCurr = rhsCurr->next;
             continue;
         }
         bool epsilonFound = true;
@@ -969,6 +956,81 @@ TerminalNode* ComputeFirst(NONTERMINAL nt){
         rhsCurr = rhsCurr->next;
     }
     return FIRST[nt];
+}
+
+void initialiseNTCOUNT(){
+    for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
+        RHS* curr = Grammer[i]->first;
+        while(curr != NULL){
+            GrammerElement* geCurr = curr->first;
+            while(geCurr != NULL){
+                if(geCurr->isTerminal == false) ntCount[geCurr->TNT.NonTerminal]++;
+                geCurr = geCurr->next;
+            }
+        }
+    }
+}
+
+TerminalNode* ComputeFollow(NONTERMINAL nt, GrammerElement* geCurr, NONTERMINAL lhs){
+    if(geCurr->TNT.NonTerminal != nt) return FOLLOW[nt];
+    if(ntCount[nt] == 0) return FOLLOW[nt];
+    ntCount[nt]--;
+    // if(geCurr->next == NULL) return FOLLOW[nt];
+    if(geCurr->next->isTerminal == true) insertFirstFollow(FOLLOW, geCurr->TNT.NonTerminal, geCurr->next->TNT.Terminal);
+    else {
+        bool isEpsilon = true;
+        GrammerElement* firstGeCurr = geCurr->next;
+        while(isEpsilon == true && firstGeCurr != NULL){
+            isEpsilon = false;
+            if(firstGeCurr->isTerminal == true) insertFirstFollow(FOLLOW, nt, firstGeCurr->TNT.Terminal);
+            else{
+                TerminalNode* toCopy = ComputeFirst(firstGeCurr->TNT.NonTerminal);
+                while (toCopy != NULL){
+                    if(toCopy->terminal != -1) insertFirstFollow(FOLLOW, geCurr->TNT.NonTerminal, toCopy->terminal);
+                    else {
+                        //if has epsilon
+                        isEpsilon = true;
+                        firstGeCurr = firstGeCurr->next;
+                    }
+                    toCopy = toCopy->next;
+                }
+            }
+        }
+        if(isEpsilon == true){
+            TerminalNode* toCopy = ComputeFollow(lhs, geCurr, lhs);
+            while (toCopy != NULL){
+                insertFirstFollow(FOLLOW, geCurr->TNT.NonTerminal, toCopy->terminal);
+                toCopy = toCopy->next;
+            }
+        }
+    }
+    return FOLLOW[nt];
+}
+
+void InitialiseFollow(){
+    initialiseNTCOUNT();
+    insertFirstFollow(FOLLOW, program, dollar);
+    for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
+        RHS* curr = Grammer[i]->first;
+        while(curr != NULL){
+            GrammerElement* geCurr = curr->first;
+            while(geCurr != NULL){
+                if(geCurr->next == NULL){
+                    TerminalNode* toCopy = ComputeFollow((NONTERMINAL)i, geCurr, (NONTERMINAL)i);
+                    while (toCopy != NULL){
+                        insertFirstFollow(FOLLOW, geCurr->TNT.NonTerminal, toCopy->terminal);
+                        toCopy = toCopy->next;
+                    }
+                }
+                if(geCurr->isTerminal == true);
+                else if(geCurr->isTerminal == false){
+                    ComputeFollow(geCurr->TNT.NonTerminal, geCurr, (NONTERMINAL)i);
+                }
+                geCurr = geCurr->next;
+            }
+            curr = curr->next;
+        }
+    }
 }
 
 bool isFIRST(NONTERMINAL nt, TOKENS t){
@@ -1019,6 +1081,8 @@ RHS* findEpsilonRule(RHSHead* rhsHead){
     return curr;
 }
 
+GrammerElement* synch;
+
 RHS* PREDICTIVE_PARSE_TABLE[GRAMMER_TABLE_SIZE][TERMINALS_SIZE] = { NULL };
 void intialisePredictiveParseTable(){
     for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){ // iterate through all non terminals
@@ -1026,7 +1090,7 @@ void intialisePredictiveParseTable(){
         TerminalNode* FirstCurr = FIRST[i];
         while(FirstCurr != NULL){
             int Terminal = FirstCurr->terminal;
-            if(Terminal != -1) PREDICTIVE_PARSE_TABLE[i][Terminal] = GrammerRule(i, Terminal);
+            if(Terminal != -1 && PREDICTIVE_PARSE_TABLE[i][Terminal] == NULL) PREDICTIVE_PARSE_TABLE[i][Terminal] = GrammerRule(i, Terminal);
             else {
                 TerminalNode* FollowCurr = FOLLOW[i];
                 RHS* epsilonRule = findEpsilonRule(Grammer[i]);
@@ -1037,6 +1101,14 @@ void intialisePredictiveParseTable(){
                 }
             }
             FirstCurr = FirstCurr->next;
+        }
+    }
+    for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
+        TerminalNode* curr = FOLLOW[i];
+        while(curr != NULL){
+            int Terminal = curr->terminal;
+            if(PREDICTIVE_PARSE_TABLE[i][Terminal] == NULL) PREDICTIVE_PARSE_TABLE[i][Terminal] = synch;
+            curr = curr->next;
         }
     }
 }
@@ -1084,6 +1156,7 @@ GrammerElement* peekInStack(ParseStack* head){
 int main(int argc, char const *argv[]){
     intialiseGrammer();
     FILE* file = fopen("output_file.txt", "rb");
+    synch = createGrammerElement(true, (int)synch);
 
     return 0;
 }
