@@ -1143,14 +1143,28 @@ void pushInStack(ParseStack* head, GrammerElement* ge){
     head->count++;
 }
 
-void popFromStack(ParseStack* head){
+GrammerElement* popFromStack(ParseStack* head){
     GrammerElement* popcorned = head->first;
     head->first = head->first->next;
     head->count--;
+    return popcorned;
 }
 
 GrammerElement* peekInStack(ParseStack* head){
     return head->first;
+}
+
+void insertRuleInStack(ParseStack* head, RHS* rule){
+    ParseStack* ReverseStack = createParseStack();
+    GrammerElement* curr = rule->first;
+    while(curr != NULL){
+        pushInStack(ReverseStack, curr);
+        curr = curr->next;
+    }
+    while(ReverseStack->count > 0){
+        curr = popFromStack(ReverseStack);
+        pushInStack(head, curr);
+    }
 }
 
 int main(int argc, char const *argv[]){
