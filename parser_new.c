@@ -912,12 +912,52 @@ void intialiseGrammer() {
 }
 
 //epsilon = -1
-typedef struct COUNT{
-    int count;
-    int *firstOrFollow;
-} COUNT;
-COUNT FIRST[GRAMMER_TABLE_SIZE];
-COUNT FOLLOW[GRAMMER_TABLE_SIZE];
+// typedef struct COUNT{
+//     int count;
+//     int *firstOrFollow;
+// } COUNT;
+// COUNT FIRST[GRAMMER_TABLE_SIZE];
+// COUNT FOLLOW[GRAMMER_TABLE_SIZE];
+
+
+typedef struct TerminalNode {
+    int terminal;
+    struct TerminalNode* next;
+} TerminalNode;
+
+TerminalNode* FIRST[GRAMMER_TABLE_SIZE] = { NULL };
+TerminalNode* FOLLOW[GRAMMER_TABLE_SIZE] = { NULL };
+
+TerminalNode* createTerminalNode(int t){
+    TerminalNode* new = (TerminalNode*)malloc(sizeof(TerminalNode));
+    new->next = NULL;
+    new->terminal = t;
+}
+
+void insertFirstFollow(TerminalNode** FF, NONTERMINAL nt, int terminal){
+    TerminalNode* new = createTerminalNode(terminal);
+    new->next = FF[nt];
+    FF[nt] = new;
+}
+
+TerminalNode* ComputeFirst(NONTERMINAL nt){
+    if(Grammer[nt] == NULL) return NULL;
+    if(FIRST[nt] != NULL) return FIRST[nt];
+    RHS* rhsCurr = Grammer[nt]->first;
+    while(rhsCurr != NULL){
+        if(rhsCurr->first == NULL) insertFirstFollow(FIRST, nt, -1);
+        else if(rhsCurr->first->isTerminal == true) insertFirstFollow(FIRST, nt, rhsCurr->first->TNT.Terminal);
+        else {
+            TerminalNode* toCopy = ComputeFirst(rhsCurr->first->TNT.NonTerminal);
+            while (toCopy != NULL){
+                insertFirstFollow(FIRST, nt, toCopy->terminal);
+                toCopy = toCopy->next;
+            }         
+        }
+        rhsCurr = rhsCurr->next;
+    }
+    return FIRST[nt];
+}
 
 bool isFIRST(NONTERMINAL nt, TOKENS t);
 bool isFOLLOW(NONTERMINAL nt, TOKENS t);
@@ -950,6 +990,28 @@ RHS* findEpsilonRule(RHSHead* rhsHead){
     RHS* curr = rhsHead->first;
     while(curr->count != 0) curr = curr->next;
     return curr;
+}
+
+RHS* PREDICTIVE_PARSE_TABLE[GRAMMER_TABLE_SIZE][TERMINALS_SIZE] = { NULL };
+void intialisePredictiveParseTable(){
+    for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){ // iterate through all non terminals
+        if(Grammer[i] == NULL) continue;
+        TerminalNode* FirstCurr = FIRST[i];
+        while(FirstCurr != NULL){
+            int Terminal = FirstCurr->terminal;
+            if(Terminal != -1) PREDICTIVE_PARSE_TABLE[i][Terminal] = GrammerRule(i, Terminal);
+            else {
+                TerminalNode* FollowCurr = FOLLOW[i];
+                RHS* epsilonRule = findEpsilonRule(Grammer[i]);
+                while(FollowCurr != NULL){
+                    int Terminal = FollowCurr->terminal;
+                    PREDICTIVE_PARSE_TABLE[i][Terminal] = epsilonRule;
+                    FollowCurr = FollowCurr->next;
+                }
+            }
+            FirstCurr = FirstCurr->next;
+        }
+    }
 }
 
 typedef struct ParseStackElement {
@@ -990,23 +1052,6 @@ void popFromStack(ParseStack* head){
 
 GrammerElement* peekInStack(ParseStack* head){
     return head->first;
-}
-
-RHS* PREDICTIVE_PARSE_TABLE[GRAMMER_TABLE_SIZE][TERMINALS_SIZE] = { NULL };
-void intialisePredictiveParseTable(){
-    for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){ // iterate through all non terminals
-        if(Grammer[i] == NULL) continue;
-        for(int j = 0; j < FIRST[i].count; j++){
-            int terminal = FIRST[i].firstOrFollow[j];
-            if(terminal != -1) PREDICTIVE_PARSE_TABLE[i][terminal] = GrammerRule(i, terminal);
-            else {
-                for(int k = 0; k < FOLLOW[i].count; k++){
-                    int terminal = FOLLOW[i].firstOrFollow[k];
-                    PREDICTIVE_PARSE_TABLE[i][terminal] = findEpsilonRule(Grammer[i]);
-                }
-            }
-        }
-    }
 }
 
 int main(int argc, char const *argv[]){
