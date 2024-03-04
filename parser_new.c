@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #define GRAMMER_TABLE_SIZE 53
 #define TERMINALS_SIZE 60
 
 typedef enum NONTERMINAL {program, mainFunction, otherFunctions, function, input_par, output_par, parameter_list, remaining_list, declaration, dataType, primitiveDatatype, constructedDatatype, stmts, typeDefinitions, actualOrRedefined, typeDefinition, fieldDefinitions, fieldDefinition, fieldType, moreFields, declarations, global_or_not, iterativeStmt, conditionalStmt, elsePart, otherStmts, stmt, assignmentStmt, ioStmt, term, termPrime, factor, var, arithmeticExpression, expPrime, singleOrRecId, option_single_constructed, oneExpansion, moreExpansions, funCallStmt, outputParameters, inputParameters, lowPrecedenceOperators, highPrecedenceOperators, booleanExpression, logicalOp, relationalOp, returnStmt, optionalReturn, idList, more_ids, definetypestmt, A} NONTERMINAL;
-typedef enum TOKENS {TK_ERROR, TK_ASSIGNOP, TK_COMMENT, TK_FIELDID, TK_ID, TK_NUM, TK_RNUM, TK_FUNID, TK_RUID, TK_WITH, TK_PARAMETERS, TK_END, TK_WHILE, TK_UNION, TK_ENDUNION, TK_DEFINETYPE, TK_AS, TK_TYPE, TK_MAIN, TK_GLOBAL, TK_PARAMETER, TK_LIST, TK_SQL, TK_SQR, TK_INPUT, TK_OUTPUT, TK_INT, TK_REAL, TK_COMMA, TK_SEM, TK_COLON, TK_DOT, TK_ENDWHILE, TK_OP, TK_CL, TK_IF, TK_THEN, TK_ENDIF, TK_READ, TK_WRITE, TK_RETURN, TK_PLUS, TK_MINUS, TK_MUL, TK_DIV, TK_CALL, TK_RECORD, TK_ENDRECORD, TK_ELSE, TK_AND, TK_OR, TK_NOT, TK_LT, TK_LE, TK_EQ, TK_GT, TK_GE, TK_NE, dollar, nf, syn} TOKENS;
+typedef enum TOKENS {TK_ERROR, TK_ASSIGNOP, TK_COMMENT, TK_FIELDID, TK_ID, TK_NUM, TK_RNUM, TK_FUNID, TK_RUID, TK_WITH, TK_PARAMETERS, TK_END, TK_WHILE, TK_UNION, TK_ENDUNION, TK_DEFINETYPE, TK_AS, TK_TYPE, TK_MAIN, TK_GLOBAL, TK_PARAMETER, TK_LIST, TK_SQL, TK_SQR, TK_INPUT, TK_OUTPUT, TK_INT, TK_REAL, TK_COMMA, TK_SEM, TK_COLON, TK_DOT, TK_ENDWHILE, TK_OP, TK_CL, TK_IF, TK_THEN, TK_ENDIF, TK_READ, TK_WRITE, TK_RETURN, TK_PLUS, TK_MINUS, TK_MUL, TK_DIV, TK_CALL, TK_RECORD, TK_ENDRECORD, TK_ELSE, TK_AND, TK_OR, TK_NOT, TK_LT, TK_LE, TK_EQ, TK_GT, TK_GE, TK_NE, dollar, nf} TOKENS;
 
 int hash(NONTERMINAL nt){
     return nt % GRAMMER_TABLE_SIZE;
@@ -129,6 +130,69 @@ TOKENS getTokenFromString(const char *input) {
     if (strcmp(input, "TK_GE") == 0) return TK_GE;
     if (strcmp(input, "TK_NE") == 0) return TK_NE;
     return nf;
+}
+const char* tokenToString(TOKENS token) {
+    switch(token) {
+        case TK_ERROR: return "TK_ERROR";
+        case TK_ASSIGNOP: return "TK_ASSIGNOP";
+        case TK_COMMENT: return "TK_COMMENT";
+        case TK_FIELDID: return "TK_FIELDID";
+        case TK_ID: return "TK_ID";
+        case TK_NUM: return "TK_NUM";
+        case TK_RNUM: return "TK_RNUM";
+        case TK_FUNID: return "TK_FUNID";
+        case TK_RUID: return "TK_RUID";
+        case TK_WITH: return "TK_WITH";
+        case TK_PARAMETERS: return "TK_PARAMETERS";
+        case TK_END: return "TK_END";
+        case TK_WHILE: return "TK_WHILE";
+        case TK_UNION: return "TK_UNION";
+        case TK_ENDUNION: return "TK_ENDUNION";
+        case TK_DEFINETYPE: return "TK_DEFINETYPE";
+        case TK_AS: return "TK_AS";
+        case TK_TYPE: return "TK_TYPE";
+        case TK_MAIN: return "TK_MAIN";
+        case TK_GLOBAL: return "TK_GLOBAL";
+        case TK_PARAMETER: return "TK_PARAMETER";
+        case TK_LIST: return "TK_LIST";
+        case TK_SQL: return "TK_SQL";
+        case TK_SQR: return "TK_SQR";
+        case TK_INPUT: return "TK_INPUT";
+        case TK_OUTPUT: return "TK_OUTPUT";
+        case TK_INT: return "TK_INT";
+        case TK_REAL: return "TK_REAL";
+        case TK_COMMA: return "TK_COMMA";
+        case TK_SEM: return "TK_SEM";
+        case TK_COLON: return "TK_COLON";
+        case TK_DOT: return "TK_DOT";
+        case TK_ENDWHILE: return "TK_ENDWHILE";
+        case TK_OP: return "TK_OP";
+        case TK_CL: return "TK_CL";
+        case TK_IF: return "TK_IF";
+        case TK_THEN: return "TK_THEN";
+        case TK_ENDIF: return "TK_ENDIF";
+        case TK_READ: return "TK_READ";
+        case TK_WRITE: return "TK_WRITE";
+        case TK_RETURN: return "TK_RETURN";
+        case TK_PLUS: return "TK_PLUS";
+        case TK_MINUS: return "TK_MINUS";
+        case TK_MUL: return "TK_MUL";
+        case TK_DIV: return "TK_DIV";
+        case TK_CALL: return "TK_CALL";
+        case TK_RECORD: return "TK_RECORD";
+        case TK_ENDRECORD: return "TK_ENDRECORD";
+        case TK_ELSE: return "TK_ELSE";
+        case TK_AND: return "TK_AND";
+        case TK_OR: return "TK_OR";
+        case TK_NOT: return "TK_NOT";
+        case TK_LT: return "TK_LT";
+        case TK_LE: return "TK_LE";
+        case TK_EQ: return "TK_EQ";
+        case TK_GT: return "TK_GT";
+        case TK_GE: return "TK_GE";
+        case TK_NE: return "TK_NE";
+        default: return "Unknown";
+    }
 }
 
 int ntCount[GRAMMER_TABLE_SIZE] = {0}; // for constructing follow such that it does not go into a recursive loop;
@@ -1019,6 +1083,10 @@ TerminalNode* ComputeFirst(NONTERMINAL nt){
     return FIRST[nt];
 }
 
+void initialiseFirst(){
+    for(int i = 0; i < GRAMMER_TABLE_SIZE; i++) ComputeFirst((NONTERMINAL)i);
+}
+
 void initialiseNTCOUNT(){
     for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
         RHS* curr = Grammer[i]->first;
@@ -1028,6 +1096,7 @@ void initialiseNTCOUNT(){
                 if(geCurr->isTerminal == false) ntCount[geCurr->TNT.NonTerminal]++;
                 geCurr = geCurr->next;
             }
+            curr = curr->next;
         }
     }
 }
@@ -1068,7 +1137,7 @@ TerminalNode* ComputeFollow(NONTERMINAL nt, GrammerElement* geCurr, NONTERMINAL 
     return FOLLOW[nt];
 }
 
-void InitialiseFollow(){
+void initialiseFollow(){
     initialiseNTCOUNT();
     insertFirstFollow(FOLLOW, program, dollar);
     for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
@@ -1076,6 +1145,7 @@ void InitialiseFollow(){
         while(curr != NULL){
             GrammerElement* geCurr = curr->first;
             while(geCurr != NULL){
+    // printf(" debug "); COMPUTEFOLLOW ERORRROROR
                 if(geCurr->next == NULL){
                     TerminalNode* toCopy = ComputeFollow((NONTERMINAL)i, geCurr, (NONTERMINAL)i);
                     while (toCopy != NULL){
@@ -1095,6 +1165,7 @@ void InitialiseFollow(){
 }
 
 bool isFIRST(NONTERMINAL nt, TOKENS t){
+    
     TerminalNode* curr = FIRST[nt];
     while(curr != NULL){
         if(curr->terminal == t) return true;
@@ -1142,11 +1213,12 @@ RHS* findEpsilonRule(RHSHead* rhsHead){
     return curr;
 }
 
-GrammerElement* synch;
+RHS* synch;
 
 RHS* PREDICTIVE_PARSE_TABLE[GRAMMER_TABLE_SIZE][TERMINALS_SIZE] = { NULL };
+
 void intialisePredictiveParseTable(){
-    synch = createGrammerElement(true, (int)syn);
+    synch = createRHSNode();
     for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){ // iterate through all non terminals
         if(Grammer[i] == NULL) continue;
         TerminalNode* FirstCurr = FIRST[i];
@@ -1175,9 +1247,36 @@ void intialisePredictiveParseTable(){
     }
 }
 
+typedef struct TreeNode {
+    GrammerElement* ge;
+    struct TreeNode* firstChild;
+    struct TreeNode* nextSibling;
+} TreeNode;
+
+TreeNode* createTreeNode(GrammerElement* ge) {
+    TreeNode* node = (TreeNode*)malloc(sizeof(TreeNode));
+    node->ge = ge;
+    node->firstChild = NULL;
+    node->nextSibling = NULL;
+    return node;
+}
+
+void addChild(TreeNode* parent, TreeNode* child) {
+    if (parent->firstChild == NULL) {
+        parent->firstChild = child;
+    } else {
+        TreeNode* temp = parent->firstChild;
+        while (temp->nextSibling != NULL) {
+            temp = temp->nextSibling;
+        }
+        temp->nextSibling = child;
+    }
+}
+
 typedef struct ParseStackElement {
-    GrammerElement* grammerElement;
+    GrammerElement* ge;
     struct ParseStackElement* next;
+    TreeNode* nodeReference;
 } ParseStackElement;
 
 typedef struct ParseStack {
@@ -1194,8 +1293,9 @@ ParseStack* createParseStack(){
 
 ParseStackElement* createParseStackElement(GrammerElement* ge){
     ParseStackElement* new = (ParseStackElement*)malloc(sizeof(ParseStackElement));
+    new->nodeReference = createTreeNode(ge);
     new->next = NULL;
-    new->grammerElement = ge;
+    new->ge = ge;
 }
 
 void pushInStack(ParseStack* head, GrammerElement* ge){
@@ -1205,101 +1305,97 @@ void pushInStack(ParseStack* head, GrammerElement* ge){
     head->count++;
 }
 
-GrammerElement* popFromStack(ParseStack* head){
-    GrammerElement* popcorned = head->first;
+TreeNode* popFromStack(ParseStack* head){
+    TreeNode* popcorned = head->first->nodeReference;
+    ParseStackElement* temp = head->first;
     head->first = head->first->next;
     head->count--;
+    free(temp);
     return popcorned;
 }
 
 GrammerElement* peekInStack(ParseStack* head){
-    return head->first;
+    return head->first->ge;
 }
 
 void insertRuleInStack(ParseStack* head, RHS* rule){
+    TreeNode* node = popFromStack(head);
     ParseStack* ReverseStack = createParseStack();
     GrammerElement* curr = rule->first;
     while(curr != NULL){
         pushInStack(ReverseStack, curr);
         curr = curr->next;
     }
-    while(ReverseStack->count > 0){
-        curr = popFromStack(ReverseStack);
+    if(ReverseStack->count > 0){
+        curr = peekInStack(ReverseStack);
+        popFromStack(ReverseStack);
         pushInStack(head, curr);
+        node->firstChild = createTreeNode(curr);
+        node = node->firstChild;
+    }
+    while(ReverseStack->count > 0){
+        curr = peekInStack(ReverseStack);
+        popFromStack(ReverseStack);
+        pushInStack(head, curr);
+        node->nextSibling = createTreeNode(curr);
+        node = node->nextSibling;
     }
 }
 
-typedef struct tokenStack{
-    TOKENS token;
-    struct tokenStack* next;
-} tokenStack;
+void printTree(TreeNode* root) {
+    if (root == NULL)
+        return;
 
-typedef struct tokenStackHead{
-    int count;
-    tokenStack* first;
-} tokenStackHead;
-
-tokenStackHead* createTokenStackHead(TOKENS t){
-    tokenStackHead* new = (tokenStackHead*)malloc(sizeof(tokenStackHead));
-    new->first = NULL;
-    new->count = 0;
-    return new;
-}
-
-tokenStack* createTokenStack(TOKENS t){
-    tokenStack* new = (tokenStack*)malloc(sizeof(tokenStack));
-    new->token = t;
-    new->next = NULL;
-    return new;
-}
-
-void pushTokenStack(tokenStackHead* head, TOKENS t) {
-    tokenStack* new_node = createTokenStackNode(t);
-    new_node->next = head->first;
-    head->first = new_node;
-    head->count++;
-}
-
-TOKENS popTokenStack(tokenStackHead* head) {
-    if (head->first == NULL) {
-        printf("Stack is empty\n");
-        exit(EXIT_FAILURE);
-    }
-    tokenStack* temp = head->first;
-    head->first = temp->next;
-    TOKENS popcorned = temp->token;
-    free(temp);
-    head->count--;
-    return popcorned;
+    const char* c;
+    if(root->ge->isTerminal == true) c = tokenToString(root->ge->TNT.Terminal);
+    else c = nonterminalToString(root->ge->TNT.NonTerminal);
+    printf("%s ", c);
+    printTree(root->firstChild);
+    printTree(root->nextSibling);
 }
 
 int main(int argc, char const *argv[]){
     intialiseGrammer();
-    FILE* file = fopen("output_file.txt", "rb");
-    char c;
-    int spaceCount = 6;
-    char currToken[16];
-    int currTokenSize = 0;
-    tokenStackHead* TokensList = createTokenStackHead();
-    do{
-        c = (char)fgetc(file);
-        if(c == ' ') {
-            spaceCount--;
-            continue;
-        }
-        if(spaceCount != 0) continue;
-        if (spaceCount == 0) {
-            currToken[currTokenSize++] = c;
-            currToken[currTokenSize] = '\0';
-            continue;
-        }
-        if(c == '\n'){
-            spaceCount = 6;
-            currTokenSize = 0;
-            pushTokenStack(TokensList, getTokenFromString(currToken));
-        }
-    }while(c != EOF);
-    fclose(file);
+    initialiseFirst();
+    initialiseFollow();
+    // intialisePredictiveParseTable();
+    // FILE* file = fopen("output_file.txt", "rb");
+    // char c;
+    // int spaceCount = 6;
+    // char currToken[16];
+    // int currTokenSize = 0;
+    // ParseStack* code = createParseStack();
+    // pushInStack(code, createGrammerElement(false, (int)dollar));
+    // pushInStack(code, createGrammerElement(false, (int)program));
+    // TreeNode* ROOT = code->first->nodeReference;
+    // do{
+    //     c = (char)fgetc(file);
+    //     if(c == ' ') {
+    //         spaceCount--;
+    //         continue;
+    //     }
+    //     if(spaceCount != 0) continue;
+    //     if (spaceCount == 0) {
+    //         currToken[currTokenSize++] = c;
+    //         currToken[currTokenSize] = '\0';
+    //         continue;
+    //     }
+    //     if(c == '\n'){
+    //         spaceCount = 6;
+    //         currTokenSize = 0;
+    //         TOKENS token = getTokenFromString(currToken);
+    //         printf("token = %d ", token);
+    //         GrammerElement* top = peekInStack(code);
+    //         if(top->isTerminal == false){
+    //             if(PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token] == synch) popFromStack(code);
+    //             else if(PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token] != NULL) insertRuleInStack(code, PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token]);
+    //         }
+    //         if(top->isTerminal == true && top->TNT.Terminal == token) popFromStack(code);
+    //     }
+    // }while(c != EOF);
+    // fclose(file);
+
+    // printTree(ROOT);
 
     return 0;
 }
