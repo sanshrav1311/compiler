@@ -21,10 +21,10 @@
 <declarations> ===> <declaration><declarations>| ε
 <global_or_not> ===> TK_COLON TK_GLOBAL| ε
 <iterativeStmt> ===> TK_WHILE TK_OP <booleanExpression> TK_CL <stmt><otherStmts> TK_ENDWHILE
-<conditionalStmt> ===> TK_IF TK_OP <booleanExpression> TK_CL TK_THEN <stmt><otherStmts> <elsePart>
 <elsePart> ===>TK_ELSE <stmt><otherStmts> TK_ENDIF | TK_ENDIF
 <otherStmts> ===> <stmt><otherStmts> | ε
 <stmt> ===> <assignmentStmt> | <iterativeStmt>|<conditionalStmt>|<ioStmt>| <funCallStmt>
+<conditionalStmt> ===> TK_IF TK_OP <booleanExpression> TK_CL TK_THEN <stmt><otherStmts> <elsePart>
 <assignmentStmt> ===><SingleOrRecId> TK_ASSIGNOP <arithmeticExpression> TK_SEM
 <ioStmt> ===>TK_READ TK_OP <var> TK_CL TK_SEM | TK_WRITE TK_OP <var> TK_CL TK_SEM
 <term> ===> <factor> <termPrime>
