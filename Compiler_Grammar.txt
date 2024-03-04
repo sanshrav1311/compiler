@@ -13,8 +13,8 @@
 <stmts> ===><typeDefinitions> <declarations> <otherStmts><returnStmt>
 <typeDefinitions> ===> <actualOrRedefined> <typeDefinitions> | ε
 <actualOrRedefined> ===> <typeDefinition> | <definetypestmt>
-<typeDefinition> ===>TK_RECORD TK_RUID <fieldDefinitions> TK_ENDRECORD | TK_UNION TK_RUID  
-<fieldDefinitions> ===> <fieldDefinition><fieldDefinition><moreFields>| TK_ENDUNION
+<typeDefinition> ===>TK_RECORD TK_RUID <fieldDefinitions> TK_ENDRECORD | TK_UNION TK_RUID <fieldDefinitions> TK_ENDUNION 
+<fieldDefinitions> ===> <fieldDefinition><fieldDefinition><moreFields>
 <fieldDefinition> ===> TK_TYPE <fieldType> TK_COLON TK_FIELDID TK_SEM
 <fieldType> ===> <primitiveDatatype> | <constructedDatatype>
 <moreFields> ===><fieldDefinition><moreFields> | ε

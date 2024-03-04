@@ -1117,6 +1117,7 @@ TerminalNode* ComputeFirst(NONTERMINAL nt){
 }
 
 void initialiseFirst(){
+    initFF();
     for(int i = 0; i < GRAMMER_TABLE_SIZE; i++) ComputeFirst((NONTERMINAL)i);
 }
 
@@ -1179,7 +1180,6 @@ TerminalNode* ComputeFollow(NONTERMINAL nt, GrammerElement* geCurr, NONTERMINAL 
 }
 
 void initialiseFollow(){
-    initFF();
     initialiseNTCOUNT();
     insertFollow(program, dollar);
     for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
@@ -1250,10 +1250,14 @@ void intialisePredictiveParseTable(){
     for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){ // iterate through all non terminals
         if(Grammer[i] == NULL) continue;
         TerminalNode* FirstCurr = FIRST[i];
+        // printf(" %s ", nonterminalToString(i));
         while(FirstCurr != NULL){
             int Terminal = FirstCurr->terminal;
-            if(Terminal != -1 && PREDICTIVE_PARSE_TABLE[i][Terminal] == NULL) PREDICTIVE_PARSE_TABLE[i][Terminal] = GrammerRule(i, Terminal);
-            else {
+            if(Terminal != -1 && PREDICTIVE_PARSE_TABLE[i][Terminal] == NULL) {
+        printf(" %s ", tokenToString(Terminal));
+                PREDICTIVE_PARSE_TABLE[i][Terminal] = GrammerRule(i, Terminal);
+            }
+            else if(Terminal == -1){
                 TerminalNode* FollowCurr = FOLLOW[i];
                 RHS* epsilonRule = findEpsilonRule(Grammer[i]);
                 while(FollowCurr != NULL){
@@ -1388,7 +1392,7 @@ int main(int argc, char const *argv[]){
     initialiseFollow();
     // printf(" DEBUG ");
     for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
-        TerminalNode* curr = FOLLOW[i];
+        TerminalNode* curr = FIRST[i];
         printf("%s ===> ", nonterminalToString((NONTERMINAL)i));
         while(curr != NULL){
             printf("%s ", tokenToString(curr->terminal));
@@ -1397,6 +1401,31 @@ int main(int argc, char const *argv[]){
         printf("\n");
     }
     intialisePredictiveParseTable();
+    // for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
+    //     printf("%s ",nonterminalToString((NONTERMINAL)i));
+    //     for(int ii = 0; ii < TERMINALS_SIZE; ii++){
+    //         // printf("%s ", tokenToString((TOKENS)ii));
+    //         if(PREDICTIVE_PARSE_TABLE[i][ii] == NULL) printf("error ");
+    //         else if(PREDICTIVE_PARSE_TABLE[i][ii] == synch) {
+    //             printf("%s ", tokenToString((TOKENS)ii));
+    //             printf("synch ");
+    //         }
+    //         else {
+    //             printf("%s ", tokenToString((TOKENS)ii));
+    //             // printf("rule ");
+    //             // RHS* rule = PREDICTIVE_PARSE_TABLE[i][ii];
+    //             // GrammerElement* ge = rule->first;
+    //             // while(ge != NULL){
+    //             //     if(ge->isTerminal == true){
+    //             //         printf("%s ", tokenToString((TOKENS)ge->TNT.Terminal));
+    //             //     }
+    //             //     else printf("%s ", nonterminalToString((NONTERMINAL)ge->TNT.NonTerminal));
+    //             //     ge = ge->next;
+    //             // }
+    //             printf("\n");
+    //         }
+    //     }
+    // }
     FILE* file = fopen("output_file.txt", "rb");
     char c;
     int spaceCount = 6;
