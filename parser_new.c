@@ -69,6 +69,67 @@ const char* nonterminalToString(NONTERMINAL nonterminal) {
         default: return "Unknown NONTERMINAL";
     }
 }
+TOKENS getTokenFromString(const char *input) {
+    if (strcmp(input, "TK_ERROR") == 0) return TK_ERROR;
+    if (strcmp(input, "TK_ASSIGNOP") == 0) return TK_ASSIGNOP;
+    if (strcmp(input, "TK_COMMENT") == 0) return TK_COMMENT;
+    if (strcmp(input, "TK_FIELDID") == 0) return TK_FIELDID;
+    if (strcmp(input, "TK_ID") == 0) return TK_ID;
+    if (strcmp(input, "TK_NUM") == 0) return TK_NUM;
+    if (strcmp(input, "TK_RNUM") == 0) return TK_RNUM;
+    if (strcmp(input, "TK_FUNID") == 0) return TK_FUNID;
+    if (strcmp(input, "TK_RUID") == 0) return TK_RUID;
+    if (strcmp(input, "TK_WITH") == 0) return TK_WITH;
+    if (strcmp(input, "TK_PARAMETERS") == 0) return TK_PARAMETERS;
+    if (strcmp(input, "TK_END") == 0) return TK_END;
+    if (strcmp(input, "TK_WHILE") == 0) return TK_WHILE;
+    if (strcmp(input, "TK_UNION") == 0) return TK_UNION;
+    if (strcmp(input, "TK_ENDUNION") == 0) return TK_ENDUNION;
+    if (strcmp(input, "TK_DEFINETYPE") == 0) return TK_DEFINETYPE;
+    if (strcmp(input, "TK_AS") == 0) return TK_AS;
+    if (strcmp(input, "TK_TYPE") == 0) return TK_TYPE;
+    if (strcmp(input, "TK_MAIN") == 0) return TK_MAIN;
+    if (strcmp(input, "TK_GLOBAL") == 0) return TK_GLOBAL;
+    if (strcmp(input, "TK_PARAMETER") == 0) return TK_PARAMETER;
+    if (strcmp(input, "TK_LIST") == 0) return TK_LIST;
+    if (strcmp(input, "TK_SQL") == 0) return TK_SQL;
+    if (strcmp(input, "TK_SQR") == 0) return TK_SQR;
+    if (strcmp(input, "TK_INPUT") == 0) return TK_INPUT;
+    if (strcmp(input, "TK_OUTPUT") == 0) return TK_OUTPUT;
+    if (strcmp(input, "TK_INT") == 0) return TK_INT;
+    if (strcmp(input, "TK_REAL") == 0) return TK_REAL;
+    if (strcmp(input, "TK_COMMA") == 0) return TK_COMMA;
+    if (strcmp(input, "TK_SEM") == 0) return TK_SEM;
+    if (strcmp(input, "TK_COLON") == 0) return TK_COLON;
+    if (strcmp(input, "TK_DOT") == 0) return TK_DOT;
+    if (strcmp(input, "TK_ENDWHILE") == 0) return TK_ENDWHILE;
+    if (strcmp(input, "TK_OP") == 0) return TK_OP;
+    if (strcmp(input, "TK_CL") == 0) return TK_CL;
+    if (strcmp(input, "TK_IF") == 0) return TK_IF;
+    if (strcmp(input, "TK_THEN") == 0) return TK_THEN;
+    if (strcmp(input, "TK_ENDIF") == 0) return TK_ENDIF;
+    if (strcmp(input, "TK_READ") == 0) return TK_READ;
+    if (strcmp(input, "TK_WRITE") == 0) return TK_WRITE;
+    if (strcmp(input, "TK_RETURN") == 0) return TK_RETURN;
+    if (strcmp(input, "TK_PLUS") == 0) return TK_PLUS;
+    if (strcmp(input, "TK_MINUS") == 0) return TK_MINUS;
+    if (strcmp(input, "TK_MUL") == 0) return TK_MUL;
+    if (strcmp(input, "TK_DIV") == 0) return TK_DIV;
+    if (strcmp(input, "TK_CALL") == 0) return TK_CALL;
+    if (strcmp(input, "TK_RECORD") == 0) return TK_RECORD;
+    if (strcmp(input, "TK_ENDRECORD") == 0) return TK_ENDRECORD;
+    if (strcmp(input, "TK_ELSE") == 0) return TK_ELSE;
+    if (strcmp(input, "TK_AND") == 0) return TK_AND;
+    if (strcmp(input, "TK_OR") == 0) return TK_OR;
+    if (strcmp(input, "TK_NOT") == 0) return TK_NOT;
+    if (strcmp(input, "TK_LT") == 0) return TK_LT;
+    if (strcmp(input, "TK_LE") == 0) return TK_LE;
+    if (strcmp(input, "TK_EQ") == 0) return TK_EQ;
+    if (strcmp(input, "TK_GT") == 0) return TK_GT;
+    if (strcmp(input, "TK_GE") == 0) return TK_GE;
+    if (strcmp(input, "TK_NE") == 0) return TK_NE;
+    return nf;
+}
 
 int ntCount[GRAMMER_TABLE_SIZE] = {0}; // for constructing follow such that it does not go into a recursive loop;
 
@@ -1085,6 +1146,7 @@ GrammerElement* synch;
 
 RHS* PREDICTIVE_PARSE_TABLE[GRAMMER_TABLE_SIZE][TERMINALS_SIZE] = { NULL };
 void intialisePredictiveParseTable(){
+    synch = createGrammerElement(true, (int)syn);
     for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){ // iterate through all non terminals
         if(Grammer[i] == NULL) continue;
         TerminalNode* FirstCurr = FIRST[i];
@@ -1167,10 +1229,77 @@ void insertRuleInStack(ParseStack* head, RHS* rule){
     }
 }
 
+typedef struct tokenStack{
+    TOKENS token;
+    struct tokenStack* next;
+} tokenStack;
+
+typedef struct tokenStackHead{
+    int count;
+    tokenStack* first;
+} tokenStackHead;
+
+tokenStackHead* createTokenStackHead(TOKENS t){
+    tokenStackHead* new = (tokenStackHead*)malloc(sizeof(tokenStackHead));
+    new->first = NULL;
+    new->count = 0;
+    return new;
+}
+
+tokenStack* createTokenStack(TOKENS t){
+    tokenStack* new = (tokenStack*)malloc(sizeof(tokenStack));
+    new->token = t;
+    new->next = NULL;
+    return new;
+}
+
+void pushTokenStack(tokenStackHead* head, TOKENS t) {
+    tokenStack* new_node = createTokenStackNode(t);
+    new_node->next = head->first;
+    head->first = new_node;
+    head->count++;
+}
+
+TOKENS popTokenStack(tokenStackHead* head) {
+    if (head->first == NULL) {
+        printf("Stack is empty\n");
+        exit(EXIT_FAILURE);
+    }
+    tokenStack* temp = head->first;
+    head->first = temp->next;
+    TOKENS popcorned = temp->token;
+    free(temp);
+    head->count--;
+    return popcorned;
+}
+
 int main(int argc, char const *argv[]){
     intialiseGrammer();
     FILE* file = fopen("output_file.txt", "rb");
-    synch = createGrammerElement(true, (int)syn);
+    char c;
+    int spaceCount = 6;
+    char currToken[16];
+    int currTokenSize = 0;
+    tokenStackHead* TokensList = createTokenStackHead();
+    do{
+        c = (char)fgetc(file);
+        if(c == ' ') {
+            spaceCount--;
+            continue;
+        }
+        if(spaceCount != 0) continue;
+        if (spaceCount == 0) {
+            currToken[currTokenSize++] = c;
+            currToken[currTokenSize] = '\0';
+            continue;
+        }
+        if(c == '\n'){
+            spaceCount = 6;
+            currTokenSize = 0;
+            pushTokenStack(TokensList, getTokenFromString(currToken));
+        }
+    }while(c != EOF);
+    fclose(file);
 
     return 0;
 }

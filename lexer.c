@@ -73,35 +73,65 @@ const char* tokenToString(TOKENS token) {
 }
 
 TOKENS getTokenFromString(const char *input) {
-    if (strcmp(input, "with") == 0) return TK_WITH;
-    else if (strcmp(input, "parameters") == 0) return TK_PARAMETERS;
-    else if (strcmp(input, "end") == 0) return TK_END;
-    else if (strcmp(input, "while") == 0) return TK_WHILE;
-    else if (strcmp(input, "union") == 0) return TK_UNION;
-    else if (strcmp(input, "endunion") == 0) return TK_ENDUNION;
-    else if (strcmp(input, "definetype") == 0) return TK_DEFINETYPE;
-    else if (strcmp(input, "as") == 0) return TK_AS;
-    else if (strcmp(input, "type") == 0) return TK_TYPE;
-    else if (strcmp(input, "_main") == 0) return TK_MAIN;
-    else if (strcmp(input, "global") == 0) return TK_GLOBAL;
-    else if (strcmp(input, "parameter") == 0) return TK_PARAMETER;
-    else if (strcmp(input, "list") == 0) return TK_LIST;
-    else if (strcmp(input, "input") == 0) return TK_INPUT;
-    else if (strcmp(input, "output") == 0) return TK_OUTPUT;
-    else if (strcmp(input, "int") == 0) return TK_INT;
-    else if (strcmp(input, "real") == 0) return TK_REAL;
-    else if (strcmp(input, "endwhile") == 0) return TK_ENDWHILE;
-    else if (strcmp(input, "if") == 0) return TK_IF;
-    else if (strcmp(input, "then") == 0) return TK_THEN;
-    else if (strcmp(input, "endif") == 0) return TK_ENDIF;
-    else if (strcmp(input, "read") == 0) return TK_READ;
-    else if (strcmp(input, "write") == 0) return TK_WRITE;
-    else if (strcmp(input, "return") == 0) return TK_RETURN;
-    else if (strcmp(input, "call") == 0) return TK_CALL;
-    else if (strcmp(input, "record") == 0) return TK_RECORD;
-    else if (strcmp(input, "endrecord") == 0) return TK_ENDRECORD;
-    else if (strcmp(input, "else") == 0) return TK_ELSE;
-    else return nf;
+    if (strcmp(input, "TK_ERROR") == 0) return TK_ERROR;
+    if (strcmp(input, "TK_ASSIGNOP") == 0) return TK_ASSIGNOP;
+    if (strcmp(input, "TK_COMMENT") == 0) return TK_COMMENT;
+    if (strcmp(input, "TK_FIELDID") == 0) return TK_FIELDID;
+    if (strcmp(input, "TK_ID") == 0) return TK_ID;
+    if (strcmp(input, "TK_NUM") == 0) return TK_NUM;
+    if (strcmp(input, "TK_RNUM") == 0) return TK_RNUM;
+    if (strcmp(input, "TK_FUNID") == 0) return TK_FUNID;
+    if (strcmp(input, "TK_RUID") == 0) return TK_RUID;
+    if (strcmp(input, "TK_WITH") == 0) return TK_WITH;
+    if (strcmp(input, "TK_PARAMETERS") == 0) return TK_PARAMETERS;
+    if (strcmp(input, "TK_END") == 0) return TK_END;
+    if (strcmp(input, "TK_WHILE") == 0) return TK_WHILE;
+    if (strcmp(input, "TK_UNION") == 0) return TK_UNION;
+    if (strcmp(input, "TK_ENDUNION") == 0) return TK_ENDUNION;
+    if (strcmp(input, "TK_DEFINETYPE") == 0) return TK_DEFINETYPE;
+    if (strcmp(input, "TK_AS") == 0) return TK_AS;
+    if (strcmp(input, "TK_TYPE") == 0) return TK_TYPE;
+    if (strcmp(input, "TK_MAIN") == 0) return TK_MAIN;
+    if (strcmp(input, "TK_GLOBAL") == 0) return TK_GLOBAL;
+    if (strcmp(input, "TK_PARAMETER") == 0) return TK_PARAMETER;
+    if (strcmp(input, "TK_LIST") == 0) return TK_LIST;
+    if (strcmp(input, "TK_SQL") == 0) return TK_SQL;
+    if (strcmp(input, "TK_SQR") == 0) return TK_SQR;
+    if (strcmp(input, "TK_INPUT") == 0) return TK_INPUT;
+    if (strcmp(input, "TK_OUTPUT") == 0) return TK_OUTPUT;
+    if (strcmp(input, "TK_INT") == 0) return TK_INT;
+    if (strcmp(input, "TK_REAL") == 0) return TK_REAL;
+    if (strcmp(input, "TK_COMMA") == 0) return TK_COMMA;
+    if (strcmp(input, "TK_SEM") == 0) return TK_SEM;
+    if (strcmp(input, "TK_COLON") == 0) return TK_COLON;
+    if (strcmp(input, "TK_DOT") == 0) return TK_DOT;
+    if (strcmp(input, "TK_ENDWHILE") == 0) return TK_ENDWHILE;
+    if (strcmp(input, "TK_OP") == 0) return TK_OP;
+    if (strcmp(input, "TK_CL") == 0) return TK_CL;
+    if (strcmp(input, "TK_IF") == 0) return TK_IF;
+    if (strcmp(input, "TK_THEN") == 0) return TK_THEN;
+    if (strcmp(input, "TK_ENDIF") == 0) return TK_ENDIF;
+    if (strcmp(input, "TK_READ") == 0) return TK_READ;
+    if (strcmp(input, "TK_WRITE") == 0) return TK_WRITE;
+    if (strcmp(input, "TK_RETURN") == 0) return TK_RETURN;
+    if (strcmp(input, "TK_PLUS") == 0) return TK_PLUS;
+    if (strcmp(input, "TK_MINUS") == 0) return TK_MINUS;
+    if (strcmp(input, "TK_MUL") == 0) return TK_MUL;
+    if (strcmp(input, "TK_DIV") == 0) return TK_DIV;
+    if (strcmp(input, "TK_CALL") == 0) return TK_CALL;
+    if (strcmp(input, "TK_RECORD") == 0) return TK_RECORD;
+    if (strcmp(input, "TK_ENDRECORD") == 0) return TK_ENDRECORD;
+    if (strcmp(input, "TK_ELSE") == 0) return TK_ELSE;
+    if (strcmp(input, "TK_AND") == 0) return TK_AND;
+    if (strcmp(input, "TK_OR") == 0) return TK_OR;
+    if (strcmp(input, "TK_NOT") == 0) return TK_NOT;
+    if (strcmp(input, "TK_LT") == 0) return TK_LT;
+    if (strcmp(input, "TK_LE") == 0) return TK_LE;
+    if (strcmp(input, "TK_EQ") == 0) return TK_EQ;
+    if (strcmp(input, "TK_GT") == 0) return TK_GT;
+    if (strcmp(input, "TK_GE") == 0) return TK_GE;
+    if (strcmp(input, "TK_NE") == 0) return TK_NE;
+    return nf;
 }
 
 typedef struct keyword{
@@ -200,7 +230,7 @@ void printToken(TOKEN *token){ // lineNumber lexeme token
         fprintf(output_file,"%d too long %s\n",token->line, tokenToString(TK_ERROR));
     }
     else if(currLexemeSize > 0){
-        fprintf(output_file,"Line no. %d Lexeme", token->line);
+        fprintf(output_file,"Line no. %d Lexeme ", token->line);
         for(int i = 0; i < currLexemeSize; i++){
             fprintf(output_file,"%c", token->lexeme[i]);
         }
@@ -401,9 +431,9 @@ int main(int argc, char const *argv[])
                 case 6:
                     if(c != '\n') state = 6;
                     else if(c == '\n'){
-                        currToken = createToken(TK_COMMENT);
-                        currLexemeSize--;
-                        printToken(currToken);
+                        // currToken = createToken(TK_COMMENT);
+                        // currLexemeSize--;
+                        // printToken(currToken);
                         currLexemeSize = 0;
                         state = 0;
                         lineNumber++;
