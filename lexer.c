@@ -4,8 +4,41 @@
 #include <string.h>
 # define NO_OF_KEYWORDS 28
 # define HASH_TABLE_SIZE 100000007
+#define BUFFER_SIZE 1024
 
-FILE *output_file; // Declare a file pointer
+FILE *output_file;
+
+// Define twin buffer structure
+typedef struct twinBuffer{
+    char buffer[BUFFER_SIZE];
+    int currentIndex;
+    int fileSize;
+} twinBuffer;
+
+// Function to read input from file into twin buffer
+twinBuffer *getStream(FILE *fp) {
+    static twinBuffer buffers[2]; // Define twin buffers
+    static int currentBuffer = 0; // Indicates which buffer is currently in use
+    static long long filePositions[2] = {0}; // Store file positions for each buffer
+
+    // Swap buffers if necessary
+    if (buffers[currentBuffer].currentIndex >= buffers[currentBuffer].fileSize) {
+        currentBuffer = (currentBuffer + 1) % 2;
+
+        // Store current file position
+        filePositions[currentBuffer] = ftell(fp);
+
+        // Read from file into buffer
+        fseek(fp, filePositions[currentBuffer], SEEK_SET);
+        buffers[currentBuffer].fileSize = fread(buffers[currentBuffer].buffer, 1, BUFFER_SIZE, fp);
+        
+        // Reset current index
+        buffers[currentBuffer].currentIndex = 0;
+    }
+
+    return buffers;
+}
+
 
 typedef enum TOKENS {TK_ERROR, TK_ASSIGNOP, TK_COMMENT, TK_FIELDID, TK_ID, TK_NUM, TK_RNUM, TK_FUNID, TK_RUID, TK_WITH, TK_PARAMETERS, TK_END, TK_WHILE, TK_UNION, TK_ENDUNION, TK_DEFINETYPE, TK_AS, TK_TYPE, TK_MAIN, TK_GLOBAL, TK_PARAMETER, TK_LIST, TK_SQL, TK_SQR, TK_INPUT, TK_OUTPUT, TK_INT, TK_REAL, TK_COMMA, TK_SEM, TK_COLON, TK_DOT, TK_ENDWHILE, TK_OP, TK_CL, TK_IF, TK_THEN, TK_ENDIF, TK_READ, TK_WRITE, TK_RETURN, TK_PLUS, TK_MINUS, TK_MUL, TK_DIV, TK_CALL, TK_RECORD, TK_ENDRECORD, TK_ELSE, TK_AND, TK_OR, TK_NOT, TK_LT, TK_LE, TK_EQ, TK_GT, TK_GE, TK_NE, dollar, nf, synch} TOKENS;
 const char* tokenToString(TOKENS token) {

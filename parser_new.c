@@ -191,7 +191,8 @@ const char* tokenToString(TOKENS token) {
         case TK_GT: return "TK_GT";
         case TK_GE: return "TK_GE";
         case TK_NE: return "TK_NE";
-        default: return "Unknown";
+        case dollar: return "dollar";
+        default: return "EPSILON";
     }
 }
 
@@ -1039,16 +1040,48 @@ typedef struct TerminalNode {
 TerminalNode* FIRST[GRAMMER_TABLE_SIZE] = { NULL };
 TerminalNode* FOLLOW[GRAMMER_TABLE_SIZE] = { NULL };
 
+void initFF(){
+    for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
+        FIRST[i] = NULL;
+        FOLLOW[i] = NULL;
+    }
+}
+
+bool isFIRST(NONTERMINAL nt, TOKENS t){
+    TerminalNode* curr = FIRST[nt];
+    while(curr != NULL){
+        if(curr->terminal == t) return true;
+        curr = curr->next;
+    }
+    return false;
+}
+
+bool isFOLLOW(NONTERMINAL nt, TOKENS t){
+    TerminalNode* curr = FOLLOW[nt];
+    while(curr != NULL){
+        if(curr->terminal == t) return true;
+        curr = curr->next;
+    }
+    return false;
+}
+
 TerminalNode* createTerminalNode(int t){
     TerminalNode* new = (TerminalNode*)malloc(sizeof(TerminalNode));
     new->next = NULL;
     new->terminal = t;
+    return new;
 }
 
 void insertFirstFollow(TerminalNode** FF, NONTERMINAL nt, int terminal){
     TerminalNode* new = createTerminalNode(terminal);
-    new->next = FF[nt];
+    if(FF[nt] != NULL)new->next = FF[nt];
     FF[nt] = new;
+}
+
+void insertFollow(NONTERMINAL nt, int terminal){
+    TerminalNode* new = createTerminalNode(terminal);
+    if(FOLLOW[nt]) new->next = FOLLOW[nt];
+    FOLLOW[nt] = new;
 }
 
 TerminalNode* ComputeFirst(NONTERMINAL nt){
@@ -1102,21 +1135,27 @@ void initialiseNTCOUNT(){
 }
 
 TerminalNode* ComputeFollow(NONTERMINAL nt, GrammerElement* geCurr, NONTERMINAL lhs){
-    if(geCurr->TNT.NonTerminal != nt) return FOLLOW[nt];
+
+    // printf("debug %s ", nonterminalToString((NONTERMINAL)geCurr->TNT.NonTerminal));
+    if((int)lhs == (int)nt) {
+        return FOLLOW[nt];
+    }
     if(ntCount[nt] == 0) return FOLLOW[nt];
     ntCount[nt]--;
     // if(geCurr->next == NULL) return FOLLOW[nt];
-    if(geCurr->next->isTerminal == true) insertFirstFollow(FOLLOW, geCurr->TNT.NonTerminal, geCurr->next->TNT.Terminal);
+    if(geCurr->next->isTerminal == true) insertFollow(geCurr->TNT.NonTerminal, geCurr->next->TNT.Terminal);
     else {
         bool isEpsilon = true;
         GrammerElement* firstGeCurr = geCurr->next;
         while(isEpsilon == true && firstGeCurr != NULL){
             isEpsilon = false;
-            if(firstGeCurr->isTerminal == true) insertFirstFollow(FOLLOW, nt, firstGeCurr->TNT.Terminal);
+            if(firstGeCurr->isTerminal == true) insertFollow(nt, firstGeCurr->TNT.Terminal);
             else{
                 TerminalNode* toCopy = ComputeFirst(firstGeCurr->TNT.NonTerminal);
+                // printf("debug %s ", nonterminalToString((NONTERMINAL)geCurr->TNT.NonTerminal));
                 while (toCopy != NULL){
-                    if(toCopy->terminal != -1) insertFirstFollow(FOLLOW, geCurr->TNT.NonTerminal, toCopy->terminal);
+                    // printf(" DEBUG ");
+                    if(toCopy->terminal != -1) insertFollow(geCurr->TNT.NonTerminal, toCopy->terminal);
                     else {
                         //if has epsilon
                         isEpsilon = true;
@@ -1127,9 +1166,11 @@ TerminalNode* ComputeFollow(NONTERMINAL nt, GrammerElement* geCurr, NONTERMINAL 
             }
         }
         if(isEpsilon == true){
+                // printf("debug %s ", nonterminalToString((NONTERMINAL)geCurr->TNT.NonTerminal));
+
             TerminalNode* toCopy = ComputeFollow(lhs, geCurr, lhs);
             while (toCopy != NULL){
-                insertFirstFollow(FOLLOW, geCurr->TNT.NonTerminal, toCopy->terminal);
+                insertFollow(geCurr->TNT.NonTerminal, toCopy->terminal);
                 toCopy = toCopy->next;
             }
         }
@@ -1138,49 +1179,36 @@ TerminalNode* ComputeFollow(NONTERMINAL nt, GrammerElement* geCurr, NONTERMINAL 
 }
 
 void initialiseFollow(){
+    initFF();
     initialiseNTCOUNT();
-    insertFirstFollow(FOLLOW, program, dollar);
+    insertFollow(program, dollar);
     for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
         RHS* curr = Grammer[i]->first;
         while(curr != NULL){
             GrammerElement* geCurr = curr->first;
             while(geCurr != NULL){
+                // printf("debug %s ", nonterminalToString((NONTERMINAL)geCurr->TNT.NonTerminal));
+
     // printf(" debug "); COMPUTEFOLLOW ERORRROROR
+                if(geCurr->isTerminal == true);
                 if(geCurr->next == NULL){
+
                     TerminalNode* toCopy = ComputeFollow((NONTERMINAL)i, geCurr, (NONTERMINAL)i);
+                    // printf(" debug NT = %s ", tokenToString((TOKENS)FOLLOW[1]->terminal)); //COMPUTEFOLLOW ERORRROROR
                     while (toCopy != NULL){
-                        insertFirstFollow(FOLLOW, geCurr->TNT.NonTerminal, toCopy->terminal);
+                        insertFollow(geCurr->TNT.NonTerminal, toCopy->terminal);
                         toCopy = toCopy->next;
                     }
                 }
-                if(geCurr->isTerminal == true);
                 else if(geCurr->isTerminal == false){
                     ComputeFollow(geCurr->TNT.NonTerminal, geCurr, (NONTERMINAL)i);
+                // printf("debug %s ", nonterminalToString((NONTERMINAL)geCurr->TNT.NonTerminal));
                 }
                 geCurr = geCurr->next;
             }
             curr = curr->next;
         }
     }
-}
-
-bool isFIRST(NONTERMINAL nt, TOKENS t){
-    
-    TerminalNode* curr = FIRST[nt];
-    while(curr != NULL){
-        if(curr->terminal == t) return true;
-        curr = curr->next;
-    }
-    return false;
-}
-
-bool isFOLLOW(NONTERMINAL nt, TOKENS t){
-    TerminalNode* curr = FOLLOW[nt];
-    while(curr != NULL){
-        if(curr->terminal == t) return true;
-        curr = curr->next;
-    }
-    return false;
 }
 
 bool GrammerRuleHasFirst(GrammerElement* geCurrent, TOKENS t){
@@ -1358,42 +1386,52 @@ int main(int argc, char const *argv[]){
     intialiseGrammer();
     initialiseFirst();
     initialiseFollow();
-    // intialisePredictiveParseTable();
-    // FILE* file = fopen("output_file.txt", "rb");
-    // char c;
-    // int spaceCount = 6;
-    // char currToken[16];
-    // int currTokenSize = 0;
-    // ParseStack* code = createParseStack();
-    // pushInStack(code, createGrammerElement(false, (int)dollar));
-    // pushInStack(code, createGrammerElement(false, (int)program));
-    // TreeNode* ROOT = code->first->nodeReference;
-    // do{
-    //     c = (char)fgetc(file);
-    //     if(c == ' ') {
-    //         spaceCount--;
-    //         continue;
-    //     }
-    //     if(spaceCount != 0) continue;
-    //     if (spaceCount == 0) {
-    //         currToken[currTokenSize++] = c;
-    //         currToken[currTokenSize] = '\0';
-    //         continue;
-    //     }
-    //     if(c == '\n'){
-    //         spaceCount = 6;
-    //         currTokenSize = 0;
-    //         TOKENS token = getTokenFromString(currToken);
-    //         printf("token = %d ", token);
-    //         GrammerElement* top = peekInStack(code);
-    //         if(top->isTerminal == false){
-    //             if(PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token] == synch) popFromStack(code);
-    //             else if(PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token] != NULL) insertRuleInStack(code, PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token]);
-    //         }
-    //         if(top->isTerminal == true && top->TNT.Terminal == token) popFromStack(code);
-    //     }
-    // }while(c != EOF);
-    // fclose(file);
+    // printf(" DEBUG ");
+    for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
+        TerminalNode* curr = FOLLOW[i];
+        printf("%s ===> ", nonterminalToString((NONTERMINAL)i));
+        while(curr != NULL){
+            printf("%s ", tokenToString(curr->terminal));
+            curr = curr->next;
+        }
+        printf("\n");
+    }
+    intialisePredictiveParseTable();
+    FILE* file = fopen("output_file.txt", "rb");
+    char c;
+    int spaceCount = 6;
+    char currToken[16];
+    int currTokenSize = 0;
+    ParseStack* code = createParseStack();
+    pushInStack(code, createGrammerElement(false, (int)dollar));
+    pushInStack(code, createGrammerElement(false, (int)program));
+    TreeNode* ROOT = code->first->nodeReference;
+    do{
+        c = (char)fgetc(file);
+        if(c == ' ') {
+            spaceCount--;
+            continue;
+        }
+        if(spaceCount != 0) continue;
+        if (spaceCount == 0) {
+            currToken[currTokenSize++] = c;
+            currToken[currTokenSize] = '\0';
+            continue;
+        }
+        if(c == '\n'){
+            spaceCount = 6;
+            currTokenSize = 0;
+            TOKENS token = getTokenFromString(currToken);
+            printf("token = %d ", token);
+            GrammerElement* top = peekInStack(code);
+            if(top->isTerminal == false){
+                if(PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token] == synch) popFromStack(code);
+                else if(PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token] != NULL) insertRuleInStack(code, PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token]);
+            }
+            if(top->isTerminal == true && top->TNT.Terminal == token) popFromStack(code);
+        }
+    }while(c != EOF);
+    fclose(file);
 
     // printTree(ROOT);
 
