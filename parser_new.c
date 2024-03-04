@@ -1211,28 +1211,34 @@ void initialiseFollow(){
     }
 }
 
+RHS* synch;
+
+RHS* PREDICTIVE_PARSE_TABLE[GRAMMER_TABLE_SIZE][TERMINALS_SIZE] = { NULL };
+
 bool GrammerRuleHasFirst(GrammerElement* geCurrent, TOKENS t){
+    if(geCurrent == NULL) return false;
     if(geCurrent->isTerminal == true) {
         if(geCurrent->TNT.Terminal == t) return true;
         else return false;
     }
     else if(geCurrent->isTerminal == false){
-        if(isFIRST(geCurrent->TNT.NonTerminal, t)) return true;
-        else if(isFIRST(geCurrent->TNT.NonTerminal, -1)) return(geCurrent->next, t);
+        if(isFIRST(geCurrent->TNT.NonTerminal, t) == true) return true;
+        else if(isFIRST(geCurrent->TNT.NonTerminal, -1) == true) return GrammerRuleHasFirst(geCurrent->next, t);
         return false;
     }
     return false;
 }
 
 RHS* GrammerRule(NONTERMINAL nt, TOKENS t){
-    int size = Grammer[hash(nt)]->count;
+    // int size = Grammer[hash(nt)]->count;
     RHS *current = Grammer[hash(nt)]->first;
     GrammerElement *geCurrent = current->first;
-    while(current->next != NULL){
-        if(GrammerRuleHasFirst(geCurrent, t)) return current;
+    while(current != NULL){
+        if(GrammerRuleHasFirst(geCurrent, t) == true) return current;
         current = current->next;
+        geCurrent = current->first;
     }
-    return current;
+    return NULL;
 }
 
 RHS* findEpsilonRule(RHSHead* rhsHead){
@@ -1240,10 +1246,6 @@ RHS* findEpsilonRule(RHSHead* rhsHead){
     while(curr->count != 0) curr = curr->next;
     return curr;
 }
-
-RHS* synch;
-
-RHS* PREDICTIVE_PARSE_TABLE[GRAMMER_TABLE_SIZE][TERMINALS_SIZE] = { NULL };
 
 void intialisePredictiveParseTable(){
     synch = createRHSNode();
@@ -1253,9 +1255,12 @@ void intialisePredictiveParseTable(){
         // printf(" %s ", nonterminalToString(i));
         while(FirstCurr != NULL){
             int Terminal = FirstCurr->terminal;
+                // printf(" %s ", tokenToString(Terminal));
+                // if(i == (NONTERMINAL)primitiveDatatype)
+                // printf("%d", PREDICTIVE_PARSE_TABLE[i][Terminal] == NULL);
             if(Terminal != -1 && PREDICTIVE_PARSE_TABLE[i][Terminal] == NULL) {
-        printf(" %s ", tokenToString(Terminal));
                 PREDICTIVE_PARSE_TABLE[i][Terminal] = GrammerRule(i, Terminal);
+                // if(i == (NONTERMINAL)primitiveDatatype) printf("%d ", PREDICTIVE_PARSE_TABLE[i][Terminal]);
             }
             else if(Terminal == -1){
                 TerminalNode* FollowCurr = FOLLOW[i];
@@ -1391,24 +1396,24 @@ int main(int argc, char const *argv[]){
     initialiseFirst();
     initialiseFollow();
     // printf(" DEBUG ");
-    for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
-        TerminalNode* curr = FIRST[i];
-        printf("%s ===> ", nonterminalToString((NONTERMINAL)i));
-        while(curr != NULL){
-            printf("%s ", tokenToString(curr->terminal));
-            curr = curr->next;
-        }
-        printf("\n");
-    }
+    // for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
+    //     TerminalNode* curr = FIRST[i];
+    //     printf("%s ===> ", nonterminalToString((NONTERMINAL)i));
+    //     while(curr != NULL){
+    //         printf("%s ", tokenToString(curr->terminal));
+    //         curr = curr->next;
+    //     }
+    //     printf("\n");
+    // }
     intialisePredictiveParseTable();
     // for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
+    //         printf("\n");
     //     printf("%s ",nonterminalToString((NONTERMINAL)i));
     //     for(int ii = 0; ii < TERMINALS_SIZE; ii++){
     //         // printf("%s ", tokenToString((TOKENS)ii));
     //         if(PREDICTIVE_PARSE_TABLE[i][ii] == NULL) printf("error ");
     //         else if(PREDICTIVE_PARSE_TABLE[i][ii] == synch) {
-    //             printf("%s ", tokenToString((TOKENS)ii));
-    //             printf("synch ");
+    //             printf("SYNCH = %s ", tokenToString((TOKENS)ii));
     //         }
     //         else {
     //             printf("%s ", tokenToString((TOKENS)ii));
@@ -1422,9 +1427,9 @@ int main(int argc, char const *argv[]){
     //             //     else printf("%s ", nonterminalToString((NONTERMINAL)ge->TNT.NonTerminal));
     //             //     ge = ge->next;
     //             // }
-    //             printf("\n");
     //         }
     //     }
+    //         printf("\n");
     // }
     FILE* file = fopen("output_file.txt", "rb");
     char c;
@@ -1462,7 +1467,7 @@ int main(int argc, char const *argv[]){
     }while(c != EOF);
     fclose(file);
 
-    // printTree(ROOT);
+    printTree(ROOT);
 
     return 0;
 }
