@@ -194,17 +194,17 @@ void retract(FILE* file_ptr, long int steps){
 
 void printToken(TOKEN *token){ // lineNumber lexeme token
     if(token->tokenName == TK_ID && currLexemeSize > 20){
-        fprintf(output_file,"%s too long %d\n", tokenToString(TK_ERROR), token->line);
+        fprintf(output_file,"%d too long %s\n",token->line, tokenToString(TK_ERROR));
     }
     else if(token->tokenName == TK_FIELDID && currLexemeSize > 30){
-        fprintf(output_file,"%s too long %d\n", tokenToString(TK_ERROR), token->line);
+        fprintf(output_file,"%d too long %s\n",token->line, tokenToString(TK_ERROR));
     }
     else if(currLexemeSize > 0){
-        fprintf(output_file,"%s ", tokenToString(token->tokenName));
+        fprintf(output_file,"%d ", token->line);
         for(int i = 0; i < currLexemeSize; i++){
             fprintf(output_file,"%c", token->lexeme[i]);
         }
-        fprintf(output_file," %d\n", token->line);
+        fprintf(output_file," %s\n", tokenToString(token->tokenName));
     }
     state = 0;
     currLexemeSize = 0;
