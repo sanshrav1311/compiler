@@ -200,11 +200,11 @@ void printToken(TOKEN *token){ // lineNumber lexeme token
         fprintf(output_file,"%d too long %s\n",token->line, tokenToString(TK_ERROR));
     }
     else if(currLexemeSize > 0){
-        fprintf(output_file,"%d ", token->line);
+        fprintf(output_file,"Line no. %d Lexeme", token->line);
         for(int i = 0; i < currLexemeSize; i++){
             fprintf(output_file,"%c", token->lexeme[i]);
         }
-        fprintf(output_file," %s\n", tokenToString(token->tokenName));
+        fprintf(output_file," Token %s\n", tokenToString(token->tokenName));
     }
     state = 0;
     currLexemeSize = 0;
