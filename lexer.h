@@ -14,7 +14,9 @@ bool findLookupTable(char* s);
 void initializeLookupTable();
 
 //tokenizing functions
-TOKEN* createToken(TOKENS token);
+char* addSuffix(const char* filename, const char* suffix);
+void Tokenize(char* filename);
+tokenInfo* createToken(TOKENS token);
 void retract(int *index, long int steps);
-void printToken(TOKEN *token);
+void printToken(tokenInfo *token);
 void printError();

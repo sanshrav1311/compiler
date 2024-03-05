@@ -1,0 +1,5 @@
+Line no. 1 Lexeme type Token TK_TYPE
+Line no. 1 Lexeme  Token TK_ERROR
+Line no. 2 Lexeme type Token TK_TYPE
+Line no. 2 Lexeme  Token TK_ERROR
+Line no. 4 Lexeme type Token TK_TYPE

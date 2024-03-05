@@ -311,16 +311,33 @@ void printError(){
     printToken(currToken);
 }
 
-int main(int argc, char const *argv[])
-{
-    output_file = fopen("lexer_output.txt", "wb");
-    initializeLookupTable();
+char* addSuffix(const char* filename, const char* suffix) {
+    size_t len1 = strlen(filename);
+    size_t len2 = strlen(suffix);
+    char* outputFilename = (char*)malloc(len1 + len2 - 3); // +1 for null terminator
+    int i = 0;
+    for(i = 0; i < len1 - 4; i++){
+        outputFilename[i] = filename[i];
+    }
+    for(;i < len1 + len2 - 4; i++){
+        outputFilename[i] = suffix[i - len1 + 4];
+    }
+    outputFilename[i] = '\0';
+
+    return outputFilename;
+}
+
+void Tokenize(const char* filename){
+    char* outputFilename = addSuffix(filename, "lexerout.txt");
+    output_file = fopen(outputFilename, "wb");
+
     FILE *file;
-    file = fopen(argv[1], "rb");
+    file = fopen(filename, "rb");
     twinBuffer buff = getStream(file);
     int currIndex = 4;
     // buff.buffers is the character array 
     char c;
+    bool flag = false;
     tokenInfo *currToken = (tokenInfo*) malloc(sizeof(tokenInfo));
     do 
     {
@@ -329,8 +346,9 @@ int main(int argc, char const *argv[])
             buff = getStream(file);
             currIndex = 4;
         }
-        if(currIndex >= buff.fileSize+4) break;
         c = buff.buffer[currIndex++];
+        if(currIndex >= buff.fileSize+5 && flag == false) flag = true;
+        else if(currIndex >= buff.fileSize+5 && flag) break;
         currLexeme[currLexemeSize] = c;
         currLexemeSize++;
         currLexeme[currLexemeSize] = '\0';
@@ -747,5 +765,11 @@ int main(int argc, char const *argv[])
 
     fclose(output_file);
     fclose(file);
+}
+
+int main(int argc, char const *argv[])
+{
+    initializeLookupTable();
+    Tokenize(argv[1]);
     return 0;
 }
