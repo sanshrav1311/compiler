@@ -344,13 +344,18 @@ void removeComments(char *testcaseFile, char *cleanFile){
     FILE* cFile = fopen(cleanFile, "wb");
     do{
         c = (char)fgetc(file);
+        if(c == EOF) break;
         if(c == '%') flag = true;
-        else if(c == '\n') flag = false;
-        if(flag == true) continue;
-        else{
+        if(c == '\n' && flag == true) {
+            flag = false;
+            continue;
+        }
+        if(flag == false){
             fprintf(cFile,"%c", c);
         }
     }while(c != EOF);
+    fclose(cFile);
+    fclose(file);
 }
 
 void Tokenize(const char* filename){

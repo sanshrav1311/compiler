@@ -54,8 +54,11 @@ int main(int argc, char *argv[]) {
 
                 break;
             case 4:
-                if(total_CPU_time_in_seconds == -1) parseInputSourceCode(argv[1]);
-                printf("Total CPU time in seconds: %.2f\n", total_CPU_time_in_seconds);
+                if(total_CPU_time_in_seconds == -1) printf("First run option 3\n");
+                else {
+                    printf("Total CPU time in Clocks: %.2f\n", total_CPU_time);
+                    printf("Total CPU time in Clocks: %.2f\n", total_CPU_time_in_seconds);
+                }
                 break;
             default:
                 printf("Invalid option. Please try again.\n");
