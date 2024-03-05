@@ -13,6 +13,8 @@ Rishabh Sahni 2021A7PS1630P
 // Function prototypes
 
 int main(int argc, char *argv[]) {
+    initializeLookupTable();
+    ComputeFirstAndFollowSets();
     if (argc != 3) {
         printf("Usage: %s input_file output_file\n", argv[0]);
         return 1;

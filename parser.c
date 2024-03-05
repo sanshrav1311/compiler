@@ -1277,7 +1277,7 @@ void parseInputSourceCode(char *testcaseFile){
     Tokenize(testcaseFile);
     FILE* file = fopen(outputFilename, "rb");
     intialiseGrammer();
-    ComputeFirstAndFollowSets();
+    // ComputeFirstAndFollowSets();
 
     // printf(" DEBUG ");
     // for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
@@ -1317,63 +1317,110 @@ void parseInputSourceCode(char *testcaseFile){
     //     }
     //         printf("\n");
     // }
-    char c;
-    int spaceCount = 6;
-    char currToken[16];
-    int currTokenSize = 0;
+    // char c;
+    // int spaceCount = 6;
+    // char currToken[16];
+    // int currTokenSize = 0;
     ParseStack* code = createParseStack();
     pushInStack(code, createGrammerElement(true, (int)dollar));
     pushInStack(code, createGrammerElement(false, (int)program));
     TreeNode* ROOT = code->first->nodeReference;
-    do{
-        c = (char)fgetc(file);
-        // printf("%c", c);
-        if(c == ' ') {
-            spaceCount--;
-            continue;
+
+    char line[1000];
+
+    while (fgets(line, sizeof(line), file)) {
+        int lineNo;
+        char lexeme[31];
+        char tokenstring[31];
+
+        // Find the position of "Line no." in the line
+        char *lineNoStart = strstr(line, "Line no.");
+        if (lineNoStart != NULL) {
+            lineNoStart += strlen("Line no.");
+            lineNo = atoi(lineNoStart);
+            // printf("Line no. %d\n", lineNo);
         }
-        else if(spaceCount != 0) continue;
-        if (spaceCount == 0 && c != '\n') {
-            currToken[currTokenSize++] = c;
-            currToken[currTokenSize] = '\0';
-            continue;
+        char *lexemeStart = strstr(line, "Lexeme");
+        if (lexemeStart != NULL) {
+            lexemeStart += strlen("Lexeme");
+            while (*lexemeStart == ' ' || *lexemeStart == '\t') {
+                lexemeStart++;
+            }
+            char *lexemeEnd = lexemeStart;
+            while (*lexemeEnd != ' ' && *lexemeEnd != '\n' && *lexemeEnd != '\0') {
+                lexemeEnd++;
+            }
+            strncpy(lexeme, lexemeStart, lexemeEnd - lexemeStart);
+            lexeme[lexemeEnd - lexemeStart] = '\0';
+            // printf("%s\n", lexeme);
         }
-        if(c == '\n'){
-            spaceCount = 6;
-            currTokenSize = 0;
-            TOKENS token = getTokenFromString(currToken);
-            // printf("token = %s ", tokenToString(token));
-            GrammerElement* top = peekInStack(code);
-            while(top->isTerminal == false){
-                if(PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token] == synch) {
-                    popFromStack(code);
-                    // printf(" if ");
-                }
-                else if(PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token] != NULL) {
-                    insertRuleInStack(code, PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token]);
-                    // printf(" elseif ");
-                }
-                else {
-                    // printf(" else ");
-                    // printf("token = %s ", tokenToString(token));
-                    // printf("%s ", nonterminalToString(top->TNT.NonTerminal));
-                    break;
-                }
-                top = peekInStack(code);
+        char *tokenStart = strstr(line, "Token");
+        if (tokenStart != NULL) {
+            tokenStart += strlen("Token");
+            while (*tokenStart == ' ' || *tokenStart == '\t') {
+                tokenStart++;
             }
-            if (top->isTerminal == true && token == top->TNT.Terminal){
-                popFromStack(code);
-                top = peekInStack(code);
-                continue;
+            char *tokenEnd = tokenStart;
+            while (*tokenEnd != ' ' && *tokenEnd != '\n' && *tokenEnd != '\0') {
+                tokenEnd++;
             }
-            if(top->isTerminal == true && token != top->TNT.Terminal){
-                // handle this error
-                popFromStack(code);
-                top = peekInStack(code);
-                continue;
-            }
+            strncpy(tokenstring, tokenStart, tokenEnd - tokenStart);
+            tokenstring[tokenEnd - tokenStart] = '\0';
+            // printf("%s\n", token);
         }
-    }while(c != EOF);
+        TOKENS token = getTokenFromString(tokenstring);
+    }
+
+    // do{
+        // c = (char)fgetc(file);
+        // // printf("%c", c);
+        // if(c == ' ') {
+        //     spaceCount--;
+        //     continue;
+        // }
+        // else if(spaceCount != 0) continue;
+        // if (spaceCount == 0 && c != '\n') {
+        //     currToken[currTokenSize++] = c;
+        //     currToken[currTokenSize] = '\0';
+        //     continue;
+        // }
+        // if(c == '\n'){
+        //     spaceCount = 6;
+        //     currTokenSize = 0;
+        //     // printf("%s", currToken);
+        //     TOKENS token = getTokenFromString(currToken);
+        //     // printf("token = %s ", tokenToString(token));
+        //     GrammerElement* top = peekInStack(code);
+            // while(top->isTerminal == false){
+            //     if(PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token] == synch) {
+            //         popFromStack(code);
+            //         // printf(" if ");
+            //     }
+            //     else if(PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token] != NULL) {
+            //         insertRuleInStack(code, PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token]);
+            //         // printf(" elseif ");
+            //     }
+            //     else {
+            //         // printf(" else ");
+            //         // printf("token = %s ", tokenToString(token));
+            //         // printf("%s ", nonterminalToString(top->TNT.NonTerminal));
+            //         break;
+            //     }
+            //     top = peekInStack(code);
+            // }
+            // if (top->isTerminal == true && token == top->TNT.Terminal){
+            //     popFromStack(code);
+            //     top = peekInStack(code);
+            //     continue;
+            // }
+            // if(top->isTerminal == true && token != top->TNT.Terminal){
+            //     // handle this error
+            //     popFromStack(code);
+            //     top = peekInStack(code);
+            //     continue;
+            // }
+        // }
+    // }while(c != EOF);
     fclose(file);
 }
 

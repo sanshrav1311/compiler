@@ -359,12 +359,15 @@ void removeComments(char *testcaseFile, char *cleanFile){
 }
 
 void Tokenize(const char* filename){
-    initializeLookupTable();
+    // initializeLookupTable();
     char* outputFilename = addSuffix(filename, "lexerout.txt");
-    FILE* output_file = fopen(outputFilename, "wb");
+    // remove(outputFilename);
+
+    FILE* output_file = fopen(outputFilename, "w");
 
     FILE *file;
     file = fopen(filename, "rb");
+
     twinBuffer buff = getStream(file);
     int currIndex = 4;
     // buff.buffers is the character array 
@@ -795,8 +798,8 @@ void Tokenize(const char* filename){
         // if(c == '\n') lineNumber++;
     } while(c != EOF);
 
-    fclose(output_file);
     fclose(file);
+    fclose(output_file);
 }
 
 // int main(int argc, char const *argv[])
