@@ -1,4 +1,10 @@
-#include "lexerDef.h";
+#include "lexerDef.h"
+
+// int state = 0;
+// int lineNumber = 1;
+// char currLexeme[21474837];
+// int currLexemeSize = 0;
+// tokenInfo* currToken;
 
 // file read function
 twinBuffer getStream(FILE *fp); 
@@ -14,10 +20,11 @@ bool findLookupTable(char* s);
 void initializeLookupTable();
 
 //tokenizing functions
-removeComments(char *testcaseFile, char *cleanFile);
+void removeComments(char *testcaseFile, char *cleanFile);
 char* addSuffix(const char* filename, const char* suffix);
-void Tokenize(char* filename);
+void Tokenize(const char* filename);
 tokenInfo* createToken(TOKENS token);
 void retract(int *index, long int steps);
 void printToken(FILE* output_file, tokenInfo *token);
 void printError(FILE* output_file);
+

@@ -48,6 +48,7 @@ TreeNode* popFromStack(ParseStack* head);
 GrammerElement* peekInStack(ParseStack* head);
 ParseStackElement* peekStack(ParseStack* head);
 void insertRuleInStack(ParseStack* head, RHS* rule);
+void parseInputSourceCode(char *testcaseFile);
 
 //print treee [isme changes ho sakte]
 void printTree(TreeNode* root, int level);

@@ -323,17 +323,18 @@ char* addSuffix(const char* filename, const char* suffix) {
     return outputFilename;
 }
 
-removeComments(char *testcaseFile, char *cleanFile){
+void removeComments(char *testcaseFile, char *cleanFile){
     FILE* file = fopen(testcaseFile, "rb");
     char c;
     bool flag = false;
+    FILE* cFile = fopen(cleanFile, "wb");
     do{
         c = (char)fgetc(file);
         if(c == '%') flag = true;
         else if(c == '\n') flag = false;
         if(flag == true) continue;
         else{
-            fprintf(cleanFile,"%c", c);
+            fprintf(cFile,"%c", c);
         }
     }while(c != EOF);
 }
@@ -778,9 +779,9 @@ void Tokenize(const char* filename){
     fclose(file);
 }
 
-int main(int argc, char const *argv[])
-{
-    initializeLookupTable();
-    Tokenize(argv[1]);
-    return 0;
-}
+// int main(int argc, char const *argv[])
+// {
+//     initializeLookupTable();
+//     Tokenize(argv[1]);
+//     return 0;
+// }
