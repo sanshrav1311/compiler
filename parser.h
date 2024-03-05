@@ -28,12 +28,13 @@ void initialiseFirst();
 void initialiseNTCOUNT();
 TerminalNode* ComputeFollow(NONTERMINAL nt, GrammerElement* geCurr, NONTERMINAL lhs);
 void initialiseFollow();
+void ComputeFirstAndFollowSets();
 
 // predictive parse table functions
 bool GrammerRuleHasFirst(GrammerElement* geCurrent, TOKENS t);
 RHS* GrammerRule(NONTERMINAL nt, TOKENS t);
 RHS* findEpsilonRule(RHSHead* rhsHead);
-void intialisePredictiveParseTable();
+void createParseTable();
 
 //parse tree functions
 TreeNode* createTreeNode(GrammerElement* ge);

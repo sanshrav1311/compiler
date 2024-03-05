@@ -191,7 +191,6 @@ const char* tokenToString(TOKENS token) {
 
 int ntCount[GRAMMER_TABLE_SIZE] = {0}; // for constructing follow such that it does not go into a recursive loop;
 
-
 RHSHead* createRHSHead() {
     RHSHead* newNode = (RHSHead*)malloc(sizeof(RHSHead));
     newNode->count = 0;
@@ -1177,6 +1176,12 @@ void initialiseFollow(){
     }
 }
 
+void ComputeFirstAndFollowSets(){
+    initialiseFirst();
+    initialiseFollow();
+    initialiseFollow();
+}
+
 RHS* synch;
 
 RHS* PREDICTIVE_PARSE_TABLE[GRAMMER_TABLE_SIZE][TERMINALS_SIZE] = { NULL };
@@ -1213,7 +1218,7 @@ RHS* findEpsilonRule(RHSHead* rhsHead){
     return curr;
 }
 
-void intialisePredictiveParseTable(){
+void createParseTable(){
     synch = createRHSNode();
     for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){ // iterate through all non terminals
         if(Grammer[i] == NULL) continue;
@@ -1370,9 +1375,7 @@ void printTree(TreeNode* root, int level) {
 
 int main(int argc, char const *argv[]){
     intialiseGrammer();
-    initialiseFirst();
-    initialiseFollow();
-    initialiseFollow();
+    ComputeFirstAndFollowSets();
 
     // printf(" DEBUG ");
     // for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
@@ -1384,8 +1387,8 @@ int main(int argc, char const *argv[]){
     //     }
     //     printf("\n");
     // }
-    intialisePredictiveParseTable();
-    // intialisePredictiveParseTable();
+    createParseTable();
+    // createParseTable();
 
     // for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
     //         printf("\n");
