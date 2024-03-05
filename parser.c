@@ -1373,6 +1373,27 @@ void printTree(TreeNode* root, int level) {
     printTree(root->nextSibling, level);
 }
 
+char* addSuffix(const char* filename, const char* suffix) {
+    size_t len1 = strlen(filename);
+    size_t len2 = strlen(suffix);
+    char* outputFilename = (char*)malloc(len1 + len2 - 3); // +1 for null terminator
+    int i = 0;
+    for(i = 0; i < len1 - 4; i++){
+        outputFilename[i] = filename[i];
+    }
+    for(;i < len1 + len2 - 4; i++){
+        outputFilename[i] = suffix[i - len1 + 4];
+    }
+    outputFilename[i] = '\0';
+
+    return outputFilename;
+}
+
+parseInputSourceCode(char *testcaseFile){
+    char* outputFilename = addSuffix(testcaseFile, "lexerout.txt");
+    FILE* file = fopen(outputFilename, "rb");
+}
+
 int main(int argc, char const *argv[]){
     intialiseGrammer();
     ComputeFirstAndFollowSets();
@@ -1472,3 +1493,4 @@ int main(int argc, char const *argv[]){
 
     return 0;
 }
+

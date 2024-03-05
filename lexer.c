@@ -1,6 +1,6 @@
 #include "lexerDef.h"
 
-FILE *output_file;
+// FILE *output_file;
 
 // Function to read input from file into twin buffer
 twinBuffer getStream(FILE *fp) {
@@ -8,7 +8,6 @@ twinBuffer getStream(FILE *fp) {
     static int initialized = 0;
     static int currentBuffer = 0; // Indicates which buffer is currently in use
     static long int filePositions = 0; // Store file positions for each buffer
-   
    
     // Initialize buffers with zeroes only if not already initialized
     if (!initialized) {
@@ -21,8 +20,6 @@ twinBuffer getStream(FILE *fp) {
         initialized = 1; // Set initialized flag to true after initialization
        
     }
-   
-
     // swap buffers
     currentBuffer = (currentBuffer + 1) % 2;
    
@@ -39,7 +36,6 @@ twinBuffer getStream(FILE *fp) {
     // Read from file into buffer
     fseek(fp, filePositions, SEEK_SET);
     buffers[currentBuffer].fileSize = fread(buffers[currentBuffer].buffer+4, 1, BUFFER_SIZE-4, fp);
-   
    
     filePositions += 1024;
     // Reset current index
@@ -287,7 +283,7 @@ void retract(int *index, long int steps){
     currLexeme[currLexemeSize] = '\0';
 }
 
-void printToken(tokenInfo *token){ // lineNumber lexeme token
+void printToken(FILE* output_file, tokenInfo *token){ // lineNumber lexeme token
     if(token->tokenName == TK_ID && currLexemeSize > 20){
         fprintf(output_file,"Line no. %d too long Token %s\n",token->line, tokenToString(TK_ERROR));
     }
@@ -306,9 +302,9 @@ void printToken(tokenInfo *token){ // lineNumber lexeme token
     free(token);
 }
 
-void printError(){
+void printError(FILE* output_file){
     currToken = createToken(TK_ERROR);
-    printToken(currToken);
+    printToken(output_file, currToken);
 }
 
 char* addSuffix(const char* filename, const char* suffix) {
@@ -327,9 +323,24 @@ char* addSuffix(const char* filename, const char* suffix) {
     return outputFilename;
 }
 
+removeComments(char *testcaseFile, char *cleanFile){
+    FILE* file = fopen(testcaseFile, "rb");
+    char c;
+    bool flag = false;
+    do{
+        c = (char)fgetc(file);
+        if(c == '%') flag = true;
+        else if(c == '\n') flag = false;
+        if(flag == true) continue;
+        else{
+            fprintf(cleanFile,"%c", c);
+        }
+    }while(c != EOF);
+}
+
 void Tokenize(const char* filename){
     char* outputFilename = addSuffix(filename, "lexerout.txt");
-    output_file = fopen(outputFilename, "wb");
+    FILE* output_file = fopen(outputFilename, "wb");
 
     FILE *file;
     file = fopen(filename, "rb");
@@ -370,55 +381,55 @@ void Tokenize(const char* filename){
                         break;
                     case '[':
                         currToken = createToken(TK_SQL);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         break;
                     case ']':
                         currToken = createToken(TK_SQR);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         break;
                     case ',':
                         currToken = createToken(TK_COMMA);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         break;
                     case ';':
                         currToken = createToken(TK_SEM);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         break;
                     case ':':
                         currToken = createToken(TK_COLON);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         break;
                     case '.':
                         currToken = createToken(TK_DOT);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         break;
                     case '(':
                         currToken = createToken(TK_OP);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         break;
                     case ')':
                         currToken = createToken(TK_CL);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         break;
                     case '+':
                         currToken = createToken(TK_PLUS);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         break;
                     case '-':
                         currToken = createToken(TK_MINUS);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         break;
                     case '*':
                         currToken = createToken(TK_MUL);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         break;
                     case '/':
                         currToken = createToken(TK_DIV);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         break;
                     case '~':
                         currToken = createToken(TK_NOT);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         break;
                     case '=':
                         state = 1;
@@ -456,7 +467,7 @@ void Tokenize(const char* filename){
                             else state = 12;
                         }
                         else {
-                            printError();
+                            printError(output_file);
                             currLexemeSize = 0;
                         }
                         break;
@@ -465,49 +476,49 @@ void Tokenize(const char* filename){
                 case 1:
                     if(c == '='){
                         currToken = createToken(TK_EQ);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     else{
                         retract(&currIndex, 1);
-                        printError();
+                        printError(output_file);
                         currLexemeSize = 0;
                     }
                     break;
                 case 2:
                     if(c == '='){
                         currToken = createToken(TK_NE);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     else{
                         retract(&currIndex, 1);
-                        printError();
+                        printError(output_file);
                         currLexemeSize = 0;
                     }
                     break;
                 case 3:
                     if(c == '='){
                         currToken = createToken(TK_NE);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     else{
                         retract(&currIndex, 1);
                         currToken = createToken(TK_NE);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
                 case 4:
                     if(c == '='){
                         currToken = createToken(TK_LE);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     else if(c != '-'){
                         retract(&currIndex, 1);
-                        printError();
+                        printError(output_file);
                         currLexemeSize = 0;
                     }
                     else if(c == '-') state = 13;
@@ -516,7 +527,7 @@ void Tokenize(const char* filename){
                     if(c >= 'a' && c <= 'z') state = 14;
                     else{
                         retract(&currIndex, 1);
-                        printError();
+                        printError(output_file);
                         currLexemeSize = 0;
                     }
                     break;
@@ -525,7 +536,7 @@ void Tokenize(const char* filename){
                     else if(c == '\n'){
                         // currToken = createToken(TK_COMMENT);
                         // currLexemeSize--;
-                        // printToken(currToken);
+                        // printToken(output_file, currToken);
                         currLexemeSize = 0;
                         state = 0;
                         lineNumber++;
@@ -534,7 +545,7 @@ void Tokenize(const char* filename){
                 case 7:
                     if(c != '@'){
                         retract(&currIndex, 1);
-                        printError();
+                        printError(output_file);
                         currLexemeSize = 0;
                     }
                     else state = 15;
@@ -542,7 +553,7 @@ void Tokenize(const char* filename){
                 case 8:
                     if(c != '&'){
                         retract(&currIndex, 1);
-                        printError();
+                        printError(output_file);
                         currLexemeSize = 0;
                     }
                     else state = 16;
@@ -553,7 +564,7 @@ void Tokenize(const char* filename){
                     }
                     else{
                         retract(&currIndex, 1);
-                        printError();
+                        printError(output_file);
                         currLexemeSize = 0;
                     }
                     break;
@@ -564,7 +575,7 @@ void Tokenize(const char* filename){
                     else if(c < '0' || c > '9'){
                         retract(&currIndex, 1);
                         currToken = createToken(TK_NUM);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
@@ -579,7 +590,7 @@ void Tokenize(const char* filename){
                         }
                         if(tempToken == nf) tempToken = TK_FIELDID;
                         currToken = createToken(tempToken);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
@@ -592,7 +603,7 @@ void Tokenize(const char* filename){
                         }
                         if(tempToken == nf) tempToken = TK_FIELDID;
                         currToken = createToken(tempToken);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
@@ -601,7 +612,7 @@ void Tokenize(const char* filename){
                     else{
                         retract(&currIndex, 2);
                         currToken = createToken(TK_LT);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
@@ -609,31 +620,31 @@ void Tokenize(const char* filename){
                     if(c < 'a' || c > 'z'){
                         retract(&currIndex, 2);
                         currToken = createToken(TK_RUID);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
                 case 15:
                     if(c != '@'){
                         retract(&currIndex, 1);
-                        printError();
+                        printError(output_file);
                         currLexemeSize = 0;
                     }
                     else {
                         currToken = createToken(TK_OR);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
                 case 16:
                     if(c != '&'){
                         retract(&currIndex, 1);
-                        printError();
+                        printError(output_file);
                         currLexemeSize = 0;
                     }
                     else {
                         currToken = createToken(TK_AND);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
@@ -648,7 +659,7 @@ void Tokenize(const char* filename){
                         }
                         if(tempToken == nf) tempToken = TK_FUNID;
                         currToken = createToken(tempToken);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
@@ -657,7 +668,7 @@ void Tokenize(const char* filename){
                     else {
                         retract(&currIndex, 2);
                         currToken = createToken(TK_NUM);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
@@ -667,20 +678,20 @@ void Tokenize(const char* filename){
                     else {
                         retract(&currIndex, 1);
                         currToken = createToken(TK_ID);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
                 case 21:
                     if(c == '-'){
                         currToken = createToken(TK_ASSIGNOP);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     else{
                         retract(&currIndex, 3);
                         currToken = createToken(TK_LT);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
@@ -694,7 +705,7 @@ void Tokenize(const char* filename){
                         }
                         if(tempToken == nf) tempToken = TK_FUNID;
                         currToken = createToken(tempToken);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
@@ -703,7 +714,7 @@ void Tokenize(const char* filename){
                     else {
                         retract(&currIndex, 3);
                         currToken = createToken(TK_NUM);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
@@ -712,7 +723,7 @@ void Tokenize(const char* filename){
                     else {
                         retract(&currIndex, 1);
                         currToken = createToken(TK_ID);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
@@ -721,7 +732,7 @@ void Tokenize(const char* filename){
                     else{
                         retract(&currIndex, 1);
                         currToken = createToken(TK_RNUM);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
@@ -731,7 +742,7 @@ void Tokenize(const char* filename){
                     else{
                         retract(&currIndex, 2);
                         currToken = createToken(TK_RNUM);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
@@ -740,20 +751,20 @@ void Tokenize(const char* filename){
                     else{
                         retract(&currIndex, 3);
                         currToken = createToken(TK_RNUM);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
                 case 28:
                     if(c >= '0' && c <= '9'){
                         currToken = createToken(TK_RNUM);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     else{
                         retract(&currIndex, 3);
                         currToken = createToken(TK_RNUM);
-                        printToken(currToken);
+                        printToken(output_file, currToken);
                         currLexemeSize = 0;
                     }
                     break;
