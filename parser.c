@@ -1138,11 +1138,24 @@ void createParseTable(){
     }
 }
 
-TreeNode* createTreeNode(GrammerElement* ge) {
+TreeNode* createTreeNode(GrammerElement* ge, int line, char* lex) {
     TreeNode* node = (TreeNode*)malloc(sizeof(TreeNode));
     node->ge = ge;
     node->firstChild = NULL;
     node->nextSibling = NULL;
+    node->lineNumber = line;
+    if(ge->isTerminal == true){
+        for(int i = 0; i < strlen(lex); i++){
+            node->lexeme[i] = lex[i];
+            node->lexeme[i+1] = '\0'; 
+        }
+    }
+    else{
+        node->lexeme[0] = '-';
+        node->lexeme[1] = '-';
+        node->lexeme[2] = '-';
+        node->lexeme[3] = '\0';
+    }
     return node;
 }
 
@@ -1165,15 +1178,15 @@ ParseStack* createParseStack(){
     return stack;
 }
 
-ParseStackElement* createParseStackElement(GrammerElement* ge){
+ParseStackElement* createParseStackElement(GrammerElement* ge, int line, char* lexeme){
     ParseStackElement* new = (ParseStackElement*)malloc(sizeof(ParseStackElement));
-    new->nodeReference = createTreeNode(ge);
+    new->nodeReference = createTreeNode(ge, line, lexeme);
     new->next = NULL;
     new->ge = ge;
 }
 
-void pushInStack(ParseStack* head, GrammerElement* ge){
-    ParseStackElement* new = createParseStackElement(ge);
+void pushInStack(ParseStack* head, GrammerElement* ge, int line, char* lex){
+    ParseStackElement* new = createParseStackElement(ge, line, lex);
     new->next = head->first;
     head->first = new;
     head->count++;
@@ -1195,22 +1208,22 @@ ParseStackElement* peekStack(ParseStack* head){
     return head->first;
 }
 
-void insertRuleInStack(ParseStack* head, RHS* rule){
+void insertRuleInStack(ParseStack* head, RHS* rule, char* lexeme, int line){
     TreeNode* node = popFromStack(head);
     // printf("%s ", nonterminalToString(node->ge->TNT.NonTerminal));
     ParseStack* ReverseStack = createParseStack();
     GrammerElement* curr = rule->first;
     if(curr == NULL){
-        node->firstChild = createTreeNode(createGrammerElement(true, epsilon));
+        node->firstChild = createTreeNode(createGrammerElement(true, epsilon), line, lexeme);
     }
     else{
-        pushInStack(ReverseStack, curr);
+        pushInStack(ReverseStack, curr, line, lexeme);
         node->firstChild = ReverseStack->first->nodeReference;
         node = node->firstChild;
         curr = curr->next;
     }
     while(curr != NULL){
-        pushInStack(ReverseStack, curr);
+        pushInStack(ReverseStack, curr, line, lexeme);
         node->nextSibling = ReverseStack->first->nodeReference;
         node = node->nextSibling;
         curr = curr->next;
@@ -1225,59 +1238,48 @@ void insertRuleInStack(ParseStack* head, RHS* rule){
     }
 }
 
-// void printTree(TreeNode* root) {
-//     if (root == NULL)
-//         return;
-
-//     if(root->ge->isTerminal == true){
-//         printf("%s ", tokenToString(root->ge->TNT.Terminal));
-//     }
-//     else printf("%s ", nonterminalToString(root->ge->TNT.NonTerminal));
-//     printTree(root->firstChild);
-//     printTree(root->nextSibling);
-// }
-
-void printTree(TreeNode* root, int level) {
-    if (root == NULL) return;
-
-    // Print spaces for level indentation
-    for (int i = 0; i < level; i++) {
-        printf("  ");
-    }
-
-    // Print the current node's GrammerElement
-
-    // Recursively print the first child and then its siblings
+void printTree(TreeNode* parent, TreeNode* root, FILE* fileptr){
+    if(root == NULL) return;
+    printTree(root, root->firstChild, fileptr);
+    
+    fprintf(fileptr, "%s %d ", root->lexeme, root->lineNumber);
+    if(root->ge->isTerminal) fprintf(fileptr, "%s ", tokenToString(root->ge->TNT.Terminal));
+    else fprintf(fileptr, "--- ");
     if(root->ge->isTerminal == true){
-        printf("%s ", tokenToString(root->ge->TNT.Terminal));
+        if(root->ge->TNT.Terminal == TK_INT || root->ge->TNT.Terminal == TK_REAL) fprintf(fileptr, "%s ", root->lexeme);
+        else{
+            fprintf(fileptr, "--- ");
+        }
     }
-    else printf("%s ", nonterminalToString(root->ge->TNT.NonTerminal));
-    printTree(root->firstChild, level + 1);
-    printTree(root->nextSibling, level);
+    else fprintf(fileptr, "%s ", root->lexeme);
+    fprintf(fileptr, "%s ", nonterminalToString(parent->ge->TNT.NonTerminal));
+    if(root->ge->isTerminal == true) fprintf(fileptr, "Yes ");
+    else fprintf(fileptr, "No ");
+    if(root->ge->isTerminal == true) fprintf(fileptr, "---\n");
+    else fprintf(fileptr, "%s\n", nonterminalToString(root->ge->TNT.NonTerminal));
+    printTree(parent, root->nextSibling, fileptr);
 }
 
-// char* addSuffix(const char* filename, const char* suffix) {
-//     size_t len1 = strlen(filename);
-//     size_t len2 = strlen(suffix);
-//     char* outputFilename = (char*)malloc(len1 + len2 - 3); // +1 for null terminator
-//     int i = 0;
-//     for(i = 0; i < len1 - 4; i++){
-//         outputFilename[i] = filename[i];
-//     }
-//     for(;i < len1 + len2 - 4; i++){
-//         outputFilename[i] = suffix[i - len1 + 4];
-//     }
-//     outputFilename[i] = '\0';
+void printParseTree(TreeNode* root, char* filename) {
+    FILE* file = fopen(filename, "wb");
+    // if (root == NULL)
+    //     return;
+    printTree(root, root, file);
+    // printParseTree(root->firstChild);
+    // if(root->ge->isTerminal == true){
+    //     printf("%s \n", tokenToString(root->ge->TNT.Terminal));
+    // }
+    // else printf("%s \n", nonterminalToString(root->ge->TNT.NonTerminal));
+    // printParseTree(root->nextSibling);
+    fclose(file);
+}
 
-//     return outputFilename;
-// }
-
-void parseInputSourceCode(char *testcaseFile){
+void parseInputSourceCode(char *testcaseFile, char* outputFile){
     char* outputFilename = addSuffix(testcaseFile, "lexerout.txt");
-    Tokenize(testcaseFile);
+    // Tokenize(testcaseFile);
     FILE* file = fopen(outputFilename, "rb");
     intialiseGrammer();
-    // ComputeFirstAndFollowSets();
+    ComputeFirstAndFollowSets();
 
     // printf(" DEBUG ");
     // for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
@@ -1290,87 +1292,67 @@ void parseInputSourceCode(char *testcaseFile){
     //     printf("\n");
     // }
     createParseTable();
-    // createParseTable();
-
-    // for(int i = 0; i < GRAMMER_TABLE_SIZE; i++){
-    //         printf("\n");
-    //     printf("%s ",nonterminalToString((NONTERMINAL)i));
-    //     for(int ii = 0; ii < TERMINALS_SIZE; ii++){
-    //         // printf("%s ", tokenToString((TOKENS)ii));
-    //         if(PREDICTIVE_PARSE_TABLE[i][ii] == NULL) printf("error ");
-    //         else if(PREDICTIVE_PARSE_TABLE[i][ii] == synch) {
-    //             printf("SYNCH = %s ", tokenToString((TOKENS)ii));
-    //         }
-    //         else {
-    //             printf("%s ", tokenToString((TOKENS)ii));
-    //             // printf("rule ");
-    //             // RHS* rule = PREDICTIVE_PARSE_TABLE[i][ii];
-    //             // GrammerElement* ge = rule->first;
-    //             // while(ge != NULL){
-    //             //     if(ge->isTerminal == true){
-    //             //         printf("%s ", tokenToString((TOKENS)ge->TNT.Terminal));
-    //             //     }
-    //             //     else printf("%s ", nonterminalToString((NONTERMINAL)ge->TNT.NonTerminal));
-    //             //     ge = ge->next;
-    //             // }
-    //         }
-    //     }
-    //         printf("\n");
-    // }
-    // char c;
-    // int spaceCount = 6;
-    // char currToken[16];
-    // int currTokenSize = 0;
+    
     ParseStack* code = createParseStack();
-    pushInStack(code, createGrammerElement(true, (int)dollar));
-    pushInStack(code, createGrammerElement(false, (int)program));
+    pushInStack(code, createGrammerElement(true, (int)dollar), 0, "---");
+    pushInStack(code, createGrammerElement(false, (int)program), 0, "---");
     TreeNode* ROOT = code->first->nodeReference;
 
     char line[1000];
 
-    while (fgets(line, sizeof(line), file)) {
+    // while (fgets(line, sizeof(line), file)) {
         int lineNo;
         char lexeme[31];
         char tokenstring[31];
 
-        // Find the position of "Line no." in the line
-        char *lineNoStart = strstr(line, "Line no.");
-        if (lineNoStart != NULL) {
-            lineNoStart += strlen("Line no.");
-            lineNo = atoi(lineNoStart);
-            // printf("Line no. %d\n", lineNo);
-        }
-        char *lexemeStart = strstr(line, "Lexeme");
-        if (lexemeStart != NULL) {
-            lexemeStart += strlen("Lexeme");
-            while (*lexemeStart == ' ' || *lexemeStart == '\t') {
-                lexemeStart++;
-            }
-            char *lexemeEnd = lexemeStart;
-            while (*lexemeEnd != ' ' && *lexemeEnd != '\n' && *lexemeEnd != '\0') {
-                lexemeEnd++;
-            }
-            strncpy(lexeme, lexemeStart, lexemeEnd - lexemeStart);
-            lexeme[lexemeEnd - lexemeStart] = '\0';
-            // printf("%s\n", lexeme);
-        }
-        char *tokenStart = strstr(line, "Token");
-        if (tokenStart != NULL) {
-            tokenStart += strlen("Token");
-            while (*tokenStart == ' ' || *tokenStart == '\t') {
-                tokenStart++;
-            }
-            char *tokenEnd = tokenStart;
-            while (*tokenEnd != ' ' && *tokenEnd != '\n' && *tokenEnd != '\0') {
-                tokenEnd++;
-            }
-            strncpy(tokenstring, tokenStart, tokenEnd - tokenStart);
-            tokenstring[tokenEnd - tokenStart] = '\0';
-            // printf("%s\n", token);
+    while (fgets(line, sizeof(line), file)) {
+        // Parse each line to extract the line number, lexeme, and token name
+        if (sscanf(line, "Line no. %d Lexeme %s Token %s", &lineNo, lexeme, tokenstring) == 3) {
+            // Here you can store `entry` in an array or process it as needed
+            // For demonstration, we just print the extracted data
+            // printf("Line: %d Lexeme: %s Token: %s\n", lineNo, lexeme, tokenstring);
+            // printf("%d", token);/
+            // count++;
         }
         TOKENS token = getTokenFromString(tokenstring);
+        // printf("%s ", tokenToString(token));
+        GrammerElement* top = peekInStack(code);
+        while(top->isTerminal == false){
+            if(PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token] == synch) {
+                popFromStack(code);
+                // printf(" if ");
+            }
+            else if(PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token] != NULL) {
+                insertRuleInStack(code, PREDICTIVE_PARSE_TABLE[top->TNT.NonTerminal][token], lexeme, lineNo);
+                // printf(" elseif ");
+            }
+            else {
+                // printf(" else ");
+                // printf("token = %s ", tokenToString(token));
+                // printf("%s ", nonterminalToString(top->TNT.NonTerminal));
+                TOKENS exp = FIRST[top->TNT.NonTerminal]->next->terminal;
+                printf("Line %d  Error: The token TK_SQL for lexeme %s  does not match with the expected token %s\n", lineNo, lexeme, tokenToString(exp));
+                memset(tokenstring, 0, sizeof(tokenstring));
+                break;
+            }
+            top = peekInStack(code);
+        }
+        memset(tokenstring, 0, sizeof(tokenstring));
+        if (top->isTerminal == true && token == top->TNT.Terminal){
+            popFromStack(code);
+            top = peekInStack(code);
+            continue;
+        }
+        if(top->isTerminal == true && token != top->TNT.Terminal){
+            // handle this error
+                // printf(" else ");
+            printf("Line %d  Error: The token TK_SQL for lexeme %s  does not match with the expected token %s\n", lineNo, lexeme, tokenToString(top->TNT.Terminal));
+            popFromStack(code);
+            top = peekInStack(code);
+            continue;
+        }
     }
-
+    printParseTree(ROOT, outputFile);
     // do{
         // c = (char)fgetc(file);
         // // printf("%c", c);

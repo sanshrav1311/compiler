@@ -13,8 +13,6 @@ Rishabh Sahni 2021A7PS1630P
 // Function prototypes
 
 int main(int argc, char *argv[]) {
-    initializeLookupTable();
-    ComputeFirstAndFollowSets();
     if (argc != 3) {
         printf("Usage: %s input_file output_file\n", argv[0]);
         return 1;
@@ -27,6 +25,7 @@ int main(int argc, char *argv[]) {
     clock_t start_time, end_time;
     double total_CPU_time, total_CPU_time_in_seconds = -1;
 
+    Tokenize(argv[1]);
     do {
         printf("\n0: For exit\n");
         printf("1: For removal of comments\n");
@@ -44,11 +43,18 @@ int main(int argc, char *argv[]) {
                 removeComments(argv[1], argv[2]);
                 break;
             case 2:
-                Tokenize(argv[1]);
+                // Tokenize(argv[1]);
+                char* lexer = addSuffix(argv[1], "lexerout.txt");
+                FILE* lexerout = fopen(lexer, "rb");
+                char c;
+                do{
+                    c = fgetc(lexerout);
+                    printf("%c", c);
+                }while(c != EOF);
                 break;
             case 3:
                 start_time = clock();
-                parseInputSourceCode(argv[1]);
+                parseInputSourceCode(argv[1], argv[2]);
                 end_time = clock();
 
                 total_CPU_time = (double)(end_time - start_time);

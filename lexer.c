@@ -32,13 +32,13 @@ twinBuffer getStream(FILE *fp) {
     // swap buffers
     currentBuffer = (currentBuffer + 1) % 2;
    
-    // printf("Fileposition: %d\n", filePositions);
+    // //printf("Fileposition: %d\n", filePositions);
     // Store current file position
     // filePositions = ftell(fp);
    
     // Copy last 4 characters of previous buffer to first 4 characters of current buffer
     for (int i = 0; i < 4; i++) {
-        // printf("Padding: %c ", buffers[(currentBuffer + 1) % 2].buffer[BUFFER_SIZE - 4 + i]);
+        // //printf("Padding: %c ", buffers[(currentBuffer + 1) % 2].buffer[BUFFER_SIZE - 4 + i]);
         buffers[currentBuffer].buffer[i] = buffers[(currentBuffer + 1) % 2].buffer[BUFFER_SIZE - 4 + i];
     }
    
@@ -49,8 +49,8 @@ twinBuffer getStream(FILE *fp) {
     filePositions += 1024;
     // Reset current index
     buffers[currentBuffer].currentIndex = 0;
-    // printf("Last 4 of current buffer: %c %c %c %c: \n", buffers[currentBuffer].buffer[BUFFER_SIZE - 4], buffers[currentBuffer].buffer[BUFFER_SIZE - 3], buffers[currentBuffer].buffer[BUFFER_SIZE - 2], buffers[currentBuffer].buffer[BUFFER_SIZE - 1]);
-    // printf("current buffer: %d\n", currentBuffer);
+    // //printf("Last 4 of current buffer: %c %c %c %c: \n", buffers[currentBuffer].buffer[BUFFER_SIZE - 4], buffers[currentBuffer].buffer[BUFFER_SIZE - 3], buffers[currentBuffer].buffer[BUFFER_SIZE - 2], buffers[currentBuffer].buffer[BUFFER_SIZE - 1]);
+    // //printf("current buffer: %d\n", currentBuffer);
     return buffers[currentBuffer];
 }
 
@@ -261,6 +261,13 @@ bool findLookupTable(char* s){
     return false;
 }
 
+tokenInfo* currToken;
+
+int state = 0;
+int lineNumber = 1;
+char currLexeme[21474837];
+int currLexemeSize = 0;
+
 void initializeLookupTable(){
     char* keywords[] = {"with", "parameters", "end", "while", "union", "endunion", "definetype", "as", "type", "_main", "global", "parameter", "list", "input", "output", "int", "real", "endwhile", "if", "then", "endif", "read", "write", "return", "call", "record", "endrecord", "else"};
     for(int i = 0; i < NO_OF_KEYWORDS; i++){
@@ -268,12 +275,7 @@ void initializeLookupTable(){
     }
 }
 
-tokenInfo* currToken;
 
-int state = 0;
-int lineNumber = 1;
-char currLexeme[21474837];
-int currLexemeSize = 0;
 
 tokenInfo* createToken(TOKENS token){
     tokenInfo* t = (tokenInfo*)malloc(sizeof(tokenInfo));
@@ -295,21 +297,21 @@ void retract(int *index, long int steps){
 void printToken(FILE* output_file, tokenInfo *token){ // lineNumber lexeme token
     if(token->tokenName == TK_ID && currLexemeSize > 20){
         fprintf(output_file,"Line no. %d too long Token %s\n",token->line, tokenToString(TK_ERROR));
-        printf("Line no. %d too long Token %s\n",token->line, tokenToString(TK_ERROR));
+        //printf("Line no. %d too long Token %s\n",token->line, tokenToString(TK_ERROR));
     }
     else if(token->tokenName == TK_FIELDID && currLexemeSize > 30){
         fprintf(output_file,"Line no. %d too long Token %s\n",token->line, tokenToString(TK_ERROR));
-        printf("Line no. %d too long Token %s\n",token->line, tokenToString(TK_ERROR));
+        //printf("Line no. %d too long Token %s\n",token->line, tokenToString(TK_ERROR));
     }
     else if(currLexemeSize > 0){
         fprintf(output_file,"Line no. %d Lexeme ", token->line);
-        printf("Line no. %d Lexeme ", token->line);
+        //printf("Line no. %d Lexeme ", token->line);
         for(int i = 0; i < currLexemeSize; i++){
             fprintf(output_file,"%c", token->lexeme[i]);
-            printf("%c", token->lexeme[i]);
+            //printf("%c", token->lexeme[i]);
         }
         fprintf(output_file," Token %s\n", tokenToString(token->tokenName));
-        printf(" Token %s\n", tokenToString(token->tokenName));
+        //printf(" Token %s\n", tokenToString(token->tokenName));
     }
     state = 0;
     currLexemeSize = 0;
@@ -359,14 +361,14 @@ void removeComments(char *testcaseFile, char *cleanFile){
 }
 
 void Tokenize(const char* filename){
-    // initializeLookupTable();
+    initializeLookupTable();
     char* outputFilename = addSuffix(filename, "lexerout.txt");
-    // remove(outputFilename);
 
-    FILE* output_file = fopen(outputFilename, "w");
+    FILE* output_file = fopen(outputFilename, "wb");
 
     FILE *file;
     file = fopen(filename, "rb");
+    // fseek(file, 0, SEEK_SET);
 
     twinBuffer buff = getStream(file);
     int currIndex = 4;
@@ -801,10 +803,3 @@ void Tokenize(const char* filename){
     fclose(file);
     fclose(output_file);
 }
-
-// int main(int argc, char const *argv[])
-// {
-//     initializeLookupTable();
-//     Tokenize(argv[1]);
-//     return 0;
-// }

@@ -46,18 +46,19 @@ RHS* findEpsilonRule(RHSHead* rhsHead);
 void createParseTable();
 
 //parse tree functions
-TreeNode* createTreeNode(GrammerElement* ge);
+TreeNode* createTreeNode(GrammerElement* ge, int line, char* lex);
 void addChild(TreeNode* parent, TreeNode* child);
 
 //parse stack functions
 ParseStack* createParseStack();
-ParseStackElement* createParseStackElement(GrammerElement* ge);
-void pushInStack(ParseStack* head, GrammerElement* ge);
+ParseStackElement* createParseStackElement(GrammerElement* ge, int line, char* lexeme);
+void pushInStack(ParseStack* head, GrammerElement* ge, int line, char* lex);
 TreeNode* popFromStack(ParseStack* head);
 GrammerElement* peekInStack(ParseStack* head);
 ParseStackElement* peekStack(ParseStack* head);
-void insertRuleInStack(ParseStack* head, RHS* rule);
-void parseInputSourceCode(char *testcaseFile);
+void insertRuleInStack(ParseStack* head, RHS* rule, char* lexeme, int line);
+void parseInputSourceCode(char *testcaseFile, char* outputfile);
 
-//print treee [isme changes ho sakte]
-void printTree(TreeNode* root, int level);
+//print treee
+void printTree(TreeNode* parent, TreeNode* root, FILE* fileptr);
+void printParseTree(TreeNode* root, char* filename);
