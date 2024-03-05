@@ -27,12 +27,12 @@
 <conditionalStmt> ===> TK_IF TK_OP <booleanExpression> TK_CL TK_THEN <stmt><otherStmts> <elsePart>
 <assignmentStmt> ===><SingleOrRecId> TK_ASSIGNOP <arithmeticExpression> TK_SEM
 <ioStmt> ===>TK_READ TK_OP <var> TK_CL TK_SEM | TK_WRITE TK_OP <var> TK_CL TK_SEM
-<term> ===> <factor> <termPrime>
-<termPrime> ===> <highPrecedenceOperators><factor> <termPrime> | ε
 <factor> ===> TK_OP <arithmeticExpression> TK_CL | <var>
-<var>===> <SingleOrRecId> | TK_NUM | TK_RNUM
 <arithmeticExpression> ===> <term> <expPrime>
 <expPrime> ===> <lowPrecedenceOperators> <term> <expPrime> | ε
+<term> ===> <factor> <termPrime>
+<termPrime> ===> <highPrecedenceOperators><factor> <termPrime> | ε
+<var>===> <SingleOrRecId> | TK_NUM | TK_RNUM
 <SingleOrRecId> ===>TK_ID <option_single_constructed>
 <option_single_constructed> ===> ε | <oneExpansion><moreExpansions>
 <oneExpansion> ===> TK_DOT TK_FIELDID 

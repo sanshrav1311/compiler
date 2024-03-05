@@ -1,50 +1,56 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-# define NO_OF_KEYWORDS 28
-# define HASH_TABLE_SIZE 100000007
-#define BUFFER_SIZE 1024
+#include "lexerDef.h"
 
 FILE *output_file;
-
-// Define twin buffer structure
-typedef struct {
-    char buffer[BUFFER_SIZE];
-    int currentIndex;
-    int fileSize;
-} twinBuffer;
 
 // Function to read input from file into twin buffer
 twinBuffer getStream(FILE *fp) {
     static twinBuffer buffers[2]; // Define twin buffers
+    static int initialized = 0;
     static int currentBuffer = 0; // Indicates which buffer is currently in use
-    static long int filePositions[2] = {0}; // Store file positions for each buffer
-
-    // Swap buffers if necessary
-    if (buffers[currentBuffer].currentIndex >= buffers[currentBuffer].fileSize) {
-        currentBuffer = (currentBuffer + 1) % 2;
-               
-        // Copy last 4 characters of previous buffer to first 4 characters of current buffer
-        for (int i = 0; i < 4; i++) {
-            buffers[currentBuffer].buffer[i] = buffers[(currentBuffer + 1) % 2].buffer[BUFFER_SIZE - 4 + i];
-        }
-
-        // Store current file position
-        filePositions[currentBuffer] = ftell(fp);
-
-        // Read from file into buffer
-        fseek(fp, filePositions[currentBuffer], SEEK_SET);
-        buffers[currentBuffer].fileSize = fread(buffers[currentBuffer].buffer, 1, BUFFER_SIZE, fp);
+    static long int filePositions = 0; // Store file positions for each buffer
+   
+   
+    // Initialize buffers with zeroes only if not already initialized
+    if (!initialized) {
+        memset(buffers, 0, sizeof(buffers));
+        buffers[0].currentIndex = 0;
+        buffers[0].fileSize = 0;
+        buffers[1].currentIndex = 0;
+        buffers[1].fileSize = 0;
+        currentBuffer = 1;
+        initialized = 1; // Set initialized flag to true after initialization
        
-        // Reset current index
-        buffers[currentBuffer].currentIndex = 0;
     }
+   
 
+    // swap buffers
+    currentBuffer = (currentBuffer + 1) % 2;
+   
+    // printf("Fileposition: %d\n", filePositions);
+    // Store current file position
+    // filePositions = ftell(fp);
+   
+    // Copy last 4 characters of previous buffer to first 4 characters of current buffer
+    for (int i = 0; i < 4; i++) {
+        // printf("Padding: %c ", buffers[(currentBuffer + 1) % 2].buffer[BUFFER_SIZE - 4 + i]);
+        buffers[currentBuffer].buffer[i] = buffers[(currentBuffer + 1) % 2].buffer[BUFFER_SIZE - 4 + i];
+    }
+   
+    // Read from file into buffer
+    fseek(fp, filePositions, SEEK_SET);
+    buffers[currentBuffer].fileSize = fread(buffers[currentBuffer].buffer+4, 1, BUFFER_SIZE-4, fp);
+   
+   
+    filePositions += 1024;
+    // Reset current index
+    buffers[currentBuffer].currentIndex = 0;
+    // printf("Last 4 of current buffer: %c %c %c %c: \n", buffers[currentBuffer].buffer[BUFFER_SIZE - 4], buffers[currentBuffer].buffer[BUFFER_SIZE - 3], buffers[currentBuffer].buffer[BUFFER_SIZE - 2], buffers[currentBuffer].buffer[BUFFER_SIZE - 1]);
+    // printf("current buffer: %d\n", currentBuffer);
     return buffers[currentBuffer];
 }
 
-typedef enum TOKENS {TK_ERROR, TK_ASSIGNOP, TK_COMMENT, TK_FIELDID, TK_ID, TK_NUM, TK_RNUM, TK_FUNID, TK_RUID, TK_WITH, TK_PARAMETERS, TK_END, TK_WHILE, TK_UNION, TK_ENDUNION, TK_DEFINETYPE, TK_AS, TK_TYPE, TK_MAIN, TK_GLOBAL, TK_PARAMETER, TK_LIST, TK_SQL, TK_SQR, TK_INPUT, TK_OUTPUT, TK_INT, TK_REAL, TK_COMMA, TK_SEM, TK_COLON, TK_DOT, TK_ENDWHILE, TK_OP, TK_CL, TK_IF, TK_THEN, TK_ENDIF, TK_READ, TK_WRITE, TK_RETURN, TK_PLUS, TK_MINUS, TK_MUL, TK_DIV, TK_CALL, TK_RECORD, TK_ENDRECORD, TK_ELSE, TK_AND, TK_OR, TK_NOT, TK_LT, TK_LE, TK_EQ, TK_GT, TK_GE, TK_NE, dollar, nf, synch} TOKENS;
+
+// typedef enum TOKENS {TK_ERROR, TK_ASSIGNOP, TK_COMMENT, TK_FIELDID, TK_ID, TK_NUM, TK_RNUM, TK_FUNID, TK_RUID, TK_WITH, TK_PARAMETERS, TK_END, TK_WHILE, TK_UNION, TK_ENDUNION, TK_DEFINETYPE, TK_AS, TK_TYPE, TK_MAIN, TK_GLOBAL, TK_PARAMETER, TK_LIST, TK_SQL, TK_SQR, TK_INPUT, TK_OUTPUT, TK_INT, TK_REAL, TK_COMMA, TK_SEM, TK_COLON, TK_DOT, TK_ENDWHILE, TK_OP, TK_CL, TK_IF, TK_THEN, TK_ENDIF, TK_READ, TK_WRITE, TK_RETURN, TK_PLUS, TK_MINUS, TK_MUL, TK_DIV, TK_CALL, TK_RECORD, TK_ENDRECORD, TK_ELSE, TK_AND, TK_OR, TK_NOT, TK_LT, TK_LE, TK_EQ, TK_GT, TK_GE, TK_NE, dollar, nf, epsilon} TOKENS;
 const char* tokenToString(TOKENS token) {
     switch(token) {
         case TK_ERROR: return "TK_ERROR";
@@ -171,10 +177,37 @@ TOKENS getTokenFromString(const char *input) {
     return nf;
 }
 
-typedef struct keyword{
-    char key[31];
-    struct keyword* next;
-}keyword;
+TOKENS getTokensFromLookup(const char* word) {
+    if (strcmp(word, "with") == 0) return TK_WITH;
+    else if (strcmp(word, "parameters") == 0) return TK_PARAMETERS;
+    else if (strcmp(word, "end") == 0) return TK_END;
+    else if (strcmp(word, "while") == 0) return TK_WHILE;
+    else if (strcmp(word, "union") == 0) return TK_UNION;
+    else if (strcmp(word, "endunion") == 0) return TK_ENDUNION;
+    else if (strcmp(word, "definetype") == 0) return TK_DEFINETYPE;
+    else if (strcmp(word, "as") == 0) return TK_AS;
+    else if (strcmp(word, "type") == 0) return TK_TYPE;
+    else if (strcmp(word, "_main") == 0) return TK_MAIN;
+    else if (strcmp(word, "global") == 0) return TK_GLOBAL;
+    else if (strcmp(word, "parameter") == 0) return TK_PARAMETER;
+    else if (strcmp(word, "list") == 0) return TK_LIST;
+    else if (strcmp(word, "input") == 0) return TK_INPUT;
+    else if (strcmp(word, "output") == 0) return TK_OUTPUT;
+    else if (strcmp(word, "int") == 0) return TK_INT;
+    else if (strcmp(word, "real") == 0) return TK_REAL;
+    else if (strcmp(word, "endwhile") == 0) return TK_ENDWHILE;
+    else if (strcmp(word, "if") == 0) return TK_IF;
+    else if (strcmp(word, "then") == 0) return TK_THEN;
+    else if (strcmp(word, "endif") == 0) return TK_ENDIF;
+    else if (strcmp(word, "read") == 0) return TK_READ;
+    else if (strcmp(word, "write") == 0) return TK_WRITE;
+    else if (strcmp(word, "return") == 0) return TK_RETURN;
+    else if (strcmp(word, "call") == 0) return TK_CALL;
+    else if (strcmp(word, "record") == 0) return TK_RECORD;
+    else if (strcmp(word, "endrecord") == 0) return TK_ENDRECORD;
+    else if (strcmp(word, "else") == 0) return TK_ELSE;
+    else return nf;
+}
 
 keyword* LookupTable[HASH_TABLE_SIZE] = { NULL };
 
@@ -187,7 +220,7 @@ int hashVal(char* s){
         int valAdd;
         if(s[i] == '_') valAdd = 27;
         else valAdd = s[i] - 'a';
-        hash = (hash*27 + valAdd)%m;
+        hash = (hash*27 + valAdd) % m;
     }
     return hash%m;
 }
@@ -214,7 +247,7 @@ void insertLookupTable(char* s){
     }
 }
 bool findLookupTable(char* s){
-    int index=hashVal(s);
+    int index = hashVal(s);
     keyword* current = LookupTable[index];
     while(current != NULL){
         if(strcmp(current->key, s) == 0) return true;
@@ -230,21 +263,15 @@ void initializeLookupTable(){
     }
 }
 
-typedef struct TOKEN {
-    int line;
-    char lexeme[21474837]; //lexeme[21];
-    TOKENS tokenName;
-} TOKEN;
-
-TOKEN* currToken;
+tokenInfo* currToken;
 
 int state = 0;
 int lineNumber = 1;
 char currLexeme[21474837];
 int currLexemeSize = 0;
 
-TOKEN* createToken(TOKENS token){
-    TOKEN* t = (TOKEN*)malloc(sizeof(TOKEN));
+tokenInfo* createToken(TOKENS token){
+    tokenInfo* t = (tokenInfo*)malloc(sizeof(tokenInfo));
     t->line = lineNumber;
     t->tokenName = token;
     for(int i = 0; i < currLexemeSize; i++){
@@ -253,18 +280,19 @@ TOKEN* createToken(TOKENS token){
     return t;
 }
 
-void retract(FILE* file_ptr, long int steps){
-    fseek(file_ptr, steps * (long int)-1, SEEK_CUR);
+void retract(int *index, long int steps){
+    // fseek(file_ptr, steps * (long int)-1, SEEK_CUR);
+    *index = *index - 1;
     currLexemeSize--;
     currLexeme[currLexemeSize] = '\0';
 }
 
-void printToken(TOKEN *token){ // lineNumber lexeme token
+void printToken(tokenInfo *token){ // lineNumber lexeme token
     if(token->tokenName == TK_ID && currLexemeSize > 20){
-        fprintf(output_file,"%d too long %s\n",token->line, tokenToString(TK_ERROR));
+        fprintf(output_file,"Line no. %d too long Token %s\n",token->line, tokenToString(TK_ERROR));
     }
     else if(token->tokenName == TK_FIELDID && currLexemeSize > 30){
-        fprintf(output_file,"%d too long %s\n",token->line, tokenToString(TK_ERROR));
+        fprintf(output_file,"Line no. %d too long Token %s\n",token->line, tokenToString(TK_ERROR));
     }
     else if(currLexemeSize > 0){
         fprintf(output_file,"Line no. %d Lexeme ", token->line);
@@ -289,11 +317,20 @@ int main(int argc, char const *argv[])
     initializeLookupTable();
     FILE *file;
     file = fopen(argv[1], "rb");
+    twinBuffer buff = getStream(file);
+    int currIndex = 4;
+    // buff.buffers is the character array 
     char c;
-    TOKEN *currToken = (TOKEN*) malloc(sizeof(TOKEN));
+    tokenInfo *currToken = (tokenInfo*) malloc(sizeof(tokenInfo));
     do 
     {
-        c = (char)fgetc(file);
+        // c = (char)fgetc(file);
+        if(currIndex >= BUFFER_SIZE){
+            buff = getStream(file);
+            currIndex = 4;
+        }
+        if(currIndex >= buff.fileSize+4) break;
+        c = buff.buffer[currIndex++];
         currLexeme[currLexemeSize] = c;
         currLexemeSize++;
         currLexeme[currLexemeSize] = '\0';
@@ -414,7 +451,7 @@ int main(int argc, char const *argv[])
                         currLexemeSize = 0;
                     }
                     else{
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         printError();
                         currLexemeSize = 0;
                     }
@@ -426,7 +463,7 @@ int main(int argc, char const *argv[])
                         currLexemeSize = 0;
                     }
                     else{
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         printError();
                         currLexemeSize = 0;
                     }
@@ -438,7 +475,7 @@ int main(int argc, char const *argv[])
                         currLexemeSize = 0;
                     }
                     else{
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         currToken = createToken(TK_NE);
                         printToken(currToken);
                         currLexemeSize = 0;
@@ -451,7 +488,7 @@ int main(int argc, char const *argv[])
                         currLexemeSize = 0;
                     }
                     else if(c != '-'){
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         printError();
                         currLexemeSize = 0;
                     }
@@ -460,7 +497,7 @@ int main(int argc, char const *argv[])
                 case 5:
                     if(c >= 'a' && c <= 'z') state = 14;
                     else{
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         printError();
                         currLexemeSize = 0;
                     }
@@ -478,7 +515,7 @@ int main(int argc, char const *argv[])
                     break;
                 case 7:
                     if(c != '@'){
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         printError();
                         currLexemeSize = 0;
                     }
@@ -486,7 +523,7 @@ int main(int argc, char const *argv[])
                     break;
                 case 8:
                     if(c != '&'){
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         printError();
                         currLexemeSize = 0;
                     }
@@ -497,7 +534,7 @@ int main(int argc, char const *argv[])
                         state = 17;
                     }
                     else{
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         printError();
                         currLexemeSize = 0;
                     }
@@ -507,7 +544,7 @@ int main(int argc, char const *argv[])
                         state = 19;
                     }
                     else if(c < '0' || c > '9'){
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         currToken = createToken(TK_NUM);
                         printToken(currToken);
                         currLexemeSize = 0;
@@ -517,10 +554,10 @@ int main(int argc, char const *argv[])
                     if(c >= 'a' && c <= 'z') state = 12;
                     else if(c >= '2' && c <= '7') state = 20;
                     else {
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         TOKENS tempToken = TK_FIELDID;
                         if(findLookupTable(currLexeme)){
-                            tempToken = getTokenFromString(currLexeme); 
+                            tempToken = getTokensFromLookup(currLexeme);
                         }
                         if(tempToken == nf) tempToken = TK_FIELDID;
                         currToken = createToken(tempToken);
@@ -530,10 +567,10 @@ int main(int argc, char const *argv[])
                     break;
                 case 12:
                     if(c < 'a' || c > 'z') {
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         TOKENS tempToken = TK_FIELDID;
                         if(findLookupTable(currLexeme)){
-                            tempToken = getTokenFromString(currLexeme); 
+                            tempToken = getTokensFromLookup(currLexeme); 
                         }
                         if(tempToken == nf) tempToken = TK_FIELDID;
                         currToken = createToken(tempToken);
@@ -544,7 +581,7 @@ int main(int argc, char const *argv[])
                 case 13:
                     if(c == '-') state = 21;
                     else{
-                        retract(file, 2);
+                        retract(&currIndex, 2);
                         currToken = createToken(TK_LT);
                         printToken(currToken);
                         currLexemeSize = 0;
@@ -552,7 +589,7 @@ int main(int argc, char const *argv[])
                     break;
                 case 14:
                     if(c < 'a' || c > 'z'){
-                        retract(file, 2);
+                        retract(&currIndex, 2);
                         currToken = createToken(TK_RUID);
                         printToken(currToken);
                         currLexemeSize = 0;
@@ -560,7 +597,7 @@ int main(int argc, char const *argv[])
                     break;
                 case 15:
                     if(c != '@'){
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         printError();
                         currLexemeSize = 0;
                     }
@@ -572,7 +609,7 @@ int main(int argc, char const *argv[])
                     break;
                 case 16:
                     if(c != '&'){
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         printError();
                         currLexemeSize = 0;
                     }
@@ -586,10 +623,10 @@ int main(int argc, char const *argv[])
                     if((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) state = 17;
                     else if(c >= '0' && c <= '9') state = 22;
                     else {
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         TOKENS tempToken = TK_FUNID;
                         if(findLookupTable(currLexeme)){
-                            tempToken = getTokenFromString(currLexeme); 
+                            tempToken = getTokensFromLookup(currLexeme); 
                         }
                         if(tempToken == nf) tempToken = TK_FUNID;
                         currToken = createToken(tempToken);
@@ -600,7 +637,7 @@ int main(int argc, char const *argv[])
                 case 19:
                     if(c >= '0' && c <= '9') state = 23;
                     else {
-                        retract(file, 2);
+                        retract(&currIndex, 2);
                         currToken = createToken(TK_NUM);
                         printToken(currToken);
                         currLexemeSize = 0;
@@ -610,7 +647,7 @@ int main(int argc, char const *argv[])
                     if(c >= 'b' && c <= 'd') state = 20;
                     else if(c >= '2' && c <= '7') state = 24;
                     else {
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         currToken = createToken(TK_ID);
                         printToken(currToken);
                         currLexemeSize = 0;
@@ -623,7 +660,7 @@ int main(int argc, char const *argv[])
                         currLexemeSize = 0;
                     }
                     else{
-                        retract(file, 3);
+                        retract(&currIndex, 3);
                         currToken = createToken(TK_LT);
                         printToken(currToken);
                         currLexemeSize = 0;
@@ -632,10 +669,10 @@ int main(int argc, char const *argv[])
                 case 22:
                     if(c >= '0' && c <= '9') state = 22;
                     else {
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         TOKENS tempToken = TK_FUNID;
                         if(findLookupTable(currLexeme)){
-                            tempToken = getTokenFromString(currLexeme); 
+                            tempToken = getTokensFromLookup(currLexeme); 
                         }
                         if(tempToken == nf) tempToken = TK_FUNID;
                         currToken = createToken(tempToken);
@@ -646,7 +683,7 @@ int main(int argc, char const *argv[])
                 case 23:
                     if(c >= '0' && c <= '9') state = 25;
                     else {
-                        retract(file, 3);
+                        retract(&currIndex, 3);
                         currToken = createToken(TK_NUM);
                         printToken(currToken);
                         currLexemeSize = 0;
@@ -655,7 +692,7 @@ int main(int argc, char const *argv[])
                 case 24:
                     if(c >= '2' && c <= '7') state = 24;
                     else {
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         currToken = createToken(TK_ID);
                         printToken(currToken);
                         currLexemeSize = 0;
@@ -664,7 +701,7 @@ int main(int argc, char const *argv[])
                 case 25:
                     if(c == 'E') state = 26;
                     else{
-                        retract(file, 1);
+                        retract(&currIndex, 1);
                         currToken = createToken(TK_RNUM);
                         printToken(currToken);
                         currLexemeSize = 0;
@@ -674,7 +711,7 @@ int main(int argc, char const *argv[])
                     if(c == '+' || c == '-') state = 27;
                     else if(c >= '0' && c <= '9') state = 28;
                     else{
-                        retract(file, 2);
+                        retract(&currIndex, 2);
                         currToken = createToken(TK_RNUM);
                         printToken(currToken);
                         currLexemeSize = 0;
@@ -683,7 +720,7 @@ int main(int argc, char const *argv[])
                 case 27:
                     if(c >= '0' && c <= '9') state = 28;
                     else{
-                        retract(file, 3);
+                        retract(&currIndex, 3);
                         currToken = createToken(TK_RNUM);
                         printToken(currToken);
                         currLexemeSize = 0;
@@ -696,7 +733,7 @@ int main(int argc, char const *argv[])
                         currLexemeSize = 0;
                     }
                     else{
-                        retract(file, 3);
+                        retract(&currIndex, 3);
                         currToken = createToken(TK_RNUM);
                         printToken(currToken);
                         currLexemeSize = 0;
