@@ -1,3 +1,10 @@
+/*
+
+
+
+
+
+*/
 #include "parser.h"
 
 int hash(NONTERMINAL nt){
@@ -1472,7 +1479,7 @@ void parseInputSourceCode(char *testcaseFile){
                 else {
                     // printf(" else ");
                     // printf("token = %s ", tokenToString(token));
-                    printf("%s ", nonterminalToString(top->TNT.NonTerminal));
+                    // printf("%s ", nonterminalToString(top->TNT.NonTerminal));
                     break;
                 }
                 top = peekInStack(code);
@@ -1480,6 +1487,13 @@ void parseInputSourceCode(char *testcaseFile){
             if (top->isTerminal == true && token == top->TNT.Terminal){
                 popFromStack(code);
                 top = peekInStack(code);
+                continue;
+            }
+            if(top->isTerminal == true && token != top->TNT.Terminal){
+                // handle this error
+                popFromStack(code);
+                top = peekInStack(code);
+                continue;
             }
         }
     }while(c != EOF);

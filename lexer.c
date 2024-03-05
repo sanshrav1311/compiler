@@ -286,16 +286,21 @@ void retract(int *index, long int steps){
 void printToken(FILE* output_file, tokenInfo *token){ // lineNumber lexeme token
     if(token->tokenName == TK_ID && currLexemeSize > 20){
         fprintf(output_file,"Line no. %d too long Token %s\n",token->line, tokenToString(TK_ERROR));
+        printf("Line no. %d too long Token %s\n",token->line, tokenToString(TK_ERROR));
     }
     else if(token->tokenName == TK_FIELDID && currLexemeSize > 30){
         fprintf(output_file,"Line no. %d too long Token %s\n",token->line, tokenToString(TK_ERROR));
+        printf("Line no. %d too long Token %s\n",token->line, tokenToString(TK_ERROR));
     }
     else if(currLexemeSize > 0){
         fprintf(output_file,"Line no. %d Lexeme ", token->line);
+        printf("Line no. %d Lexeme ", token->line);
         for(int i = 0; i < currLexemeSize; i++){
             fprintf(output_file,"%c", token->lexeme[i]);
+            printf("%c", token->lexeme[i]);
         }
         fprintf(output_file," Token %s\n", tokenToString(token->tokenName));
+        printf(" Token %s\n", tokenToString(token->tokenName));
     }
     state = 0;
     currLexemeSize = 0;
@@ -340,6 +345,7 @@ void removeComments(char *testcaseFile, char *cleanFile){
 }
 
 void Tokenize(const char* filename){
+    initializeLookupTable();
     char* outputFilename = addSuffix(filename, "lexerout.txt");
     FILE* output_file = fopen(outputFilename, "wb");
 

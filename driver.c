@@ -28,7 +28,6 @@ int main(int argc, char *argv[]) {
 
         switch (option) {
             case 0:
-                printf("Exiting...\n");
                 break;
             case 1:
                 removeComments(argv[1], argv[2]);
