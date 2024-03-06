@@ -35,7 +35,9 @@ int main(int argc, char *argv[]) {
 
         printf("Enter your choice: ");
         scanf("%d", &option);
-
+        char* lexer = addSuffix(argv[1], "lexerout.txt");
+        FILE* lexerout = fopen(lexer, "rb");
+        char c;
         switch (option) {
             case 0:
                 break;
@@ -44,9 +46,7 @@ int main(int argc, char *argv[]) {
                 break;
             case 2:
                 // Tokenize(argv[1]);
-                char* lexer = addSuffix(argv[1], "lexerout.txt");
-                FILE* lexerout = fopen(lexer, "rb");
-                char c;
+                
                 do{
                     c = fgetc(lexerout);
                     printf("%c", c);

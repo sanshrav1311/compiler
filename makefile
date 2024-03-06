@@ -4,7 +4,7 @@ SRC = driver.c parser.c lexer.c
 
 OBJ = $(SRC:.c=.o)
 
-EXEC=a.exe
+EXEC=a.out
 
 all: $(EXEC)
 
